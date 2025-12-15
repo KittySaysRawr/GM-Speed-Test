@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internet Speed Checker</title>
+    <style>
+        :root {
+            --green-primary: #4CAF50;
+            --green-dark: #2E7D32;
+            --green-light: #C8E6C9;
+            --amber: #FF9800;
+            --red: #F44336;
+            --text-dark: #333;
+            --text-light: #fff;
+            --bg-light: #f5f5f5;
+            --bg-dark: #263238;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+        
+        body.dark-mode {
+            background: var(--bg-dark);
+            color: var(--text-light);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .dark-mode .container {
+            background: #37474F;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+        }
+        
+        .server-info {
+            background: var(--green-light);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        
+        .dark-mode .server-info {
+            background: #1B5E20;
+        }
+        
+        .speed-result {
+            display: none;
+            text-align: center;
+            padding: 40px 30px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background: var(--green-light);
+        }
+        
+        .dark-mode .speed-result {
+            background: #1B5E20;
+        }
+        
+        .speed-value {
+            font-size: 3.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .speed-good { color: var(--green-dark); }
+        .speed-medium { color: var(--amber); }
+        .speed-slow { color: var(--red); }
+        
+        .test-button {
+            background: var(--green-primary);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 1.3em;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 30px auto;
+            display: block;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        
+        .test-button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            background: var(--green-dark);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .test-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--green-primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 100;
+        }
+        
+        .test-details {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .detail-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 10px;
+            min-width: 150px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .dark-mode .detail-box {
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .detail-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .detail-label {
+            font-size: 0.95em;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .dark-mode .detail-label {
+            color: #ccc;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            margin: 40px 0 30px 0;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .dark-mode .progress-container {
+            background: #455A64;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green-primary), var(--green-dark));
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .status-message {
+            text-align: center;
+            margin: 25px 0;
+            font-size: 1.1em;
+            color: #666;
+            min-height: 28px;
+            font-weight: 500;
+        }
+        
+        .dark-mode .status-message {
+            color: #ccc;
+        }
+        
+        .test-stages {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
+            font-size: 0.95em;
+            color: #666;
+        }
+        
+        .test-stage {
+            text-align: center;
+            flex: 1;
+            padding: 10px 5px;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .test-stage.active {
+            color: var(--green-primary);
+            font-weight: bold;
+            opacity: 1;
+            border-bottom: 3px solid var(--green-primary);
+        }
+        
+        .connection-info {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #666;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+        }
+        
+        .dark-mode .connection-info {
+            background: rgba(0, 0, 0, 0.2);
+            color: #ccc;
+        }
+        
+        .server-testing {
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        .dark-mode .server-testing {
+            background: rgba(46, 125, 50, 0.2);
+        }
+        
+        .jitter-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .accuracy-note {
+            text-align: center;
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        
+        .dark-mode .accuracy-note {
+            color: #aaa;
+        }
+        
+        .server-map {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .server-pill {
+            background: #e0e0e0;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+        }
+        
+        .server-pill.testing {
+            background: var(--green-primary);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .server-pill.selected {
+            background: var(--green-dark);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .server-pill.failed {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .dark-mode .server-pill {
+            background: #455A64;
+        }
+        
+        .dark-mode .server-pill.testing {
+            background: var(--green-primary);
+        }
+        
+        .dark-mode .server-pill.selected {
+            background: var(--green-dark);
+        }
+        
+        .connection-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        
+        .badge-wifi { background: #4CAF50; color: white; }
+        .badge-4g { background: #2196F3; color: white; }
+        .badge-5g { background: #9C27B0; color: white; }
+        .badge-ethernet { background: #795548; color: white; }
+        .badge-unknown { background: #9E9E9E; color: white; }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Light/Dark</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1>Internet Speed Checker</h1>
+            <p>Testing your connection using the nearest available server</p>
+        </div>
+        
+        <div class="server-info" id="serverInfo">
+            Detecting your location and connection type...
+        </div>
+        
+        <div class="server-map" id="serverMap" style="display: none;">
+            <!-- Server pills will be added here dynamically -->
+        </div>
+        
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div class="test-stages" id="testStages">
+            <div class="test-stage" id="stageLocation">Finding Nearest Server</div>
+            <div class="test-stage" id="stagePing">Latency Test</div>
+            <div class="test-stage" id="stageDownload">Download Test</div>
+            <div class="test-stage" id="stageUpload">Upload Test</div>
+            <div class="test-stage" id="stageComplete">Analysis</div>
+        </div>
+        
+        <div class="status-message" id="statusMessage">
+            Ready to test your internet connection
+        </div>
+        
+        <button class="test-button" onclick="startSpeedTest()" id="testButton">Start Speed Test</button>
+        
+        <div id="speedResult" class="speed-result">
+            <h2>Connection Analysis Results</h2>
+            <div id="speedValue" class="speed-value">--</div>
+            <div id="speedStatus" style="font-size: 1.2em; margin-bottom: 30px;">--</div>
+            
+            <div class="test-details">
+                <div class="detail-box">
+                    <div class="detail-value" id="downloadSpeed">--</div>
+                    <div class="detail-label">DOWNLOAD SPEED</div>
+                    <div style="font-size: 0.8em; color: #888; margin-top: 5px;" id="downloadQuality">--</div>
+                </div>
+                <div class="detail-box">
+                    <div class="detail-value" id="uploadSpeed">--</div>
+                    <div class="detail-label">UPLOAD SPEED</div>
+                    <div style="font-size: 0.8em; color: #888; margin-top: 5px;" id="uploadQuality">--</div>
+                </div>
+                <div class="detail-box">
+                    <div class="detail-value" id="pingValue">--</div>
+                    <div class="detail-label">PING</div>
+                    <div style="font-size: 0.8em; color: #888; margin-top: 5px;" id="pingQuality">--</div>
+                </div>
+                <div class="detail-box">
+                    <div class="detail-value" id="jitterValue">--</div>
+                    <div class="detail-label">JITTER</div>
+                    <div style="font-size: 0.8em; color: #888; margin-top: 5px;" id="jitterQuality">--</div>
+                </div>
+            </div>
+            
+            <div class="connection-info">
+                <div id="ispInfo"><strong>ISP:</strong> --</div>
+                <div id="connectionType" style="margin-top: 8px;"><strong>Connection Type:</strong> --</div>
+                <div id="networkType" style="margin-top: 8px;"><strong>Network Technology:</strong> --</div>
+                <div id="detectedLocation" style="margin-top: 8px;"><strong>Your Location:</strong> --</div>
+                <div id="serverLocation" style="margin-top: 8px;"><strong>Test Server:</strong> --</div>
+                <div id="connectionAccuracy" style="margin-top: 8px; font-size: 0.85em; color: #666;">
+                    <strong>Detection Method:</strong> Speed-based analysis combined with browser API
+                </div>
+            </div>
+            
+            <div class="accuracy-note">
+                Network type detected based on speed, latency, and browser capabilities
+            </div>
+        </div>
+        
+        <div class="server-testing" id="serverTesting" style="display: none;">
+            <div id="serverStatus"><strong>Server Selection:</strong> Testing servers by proximity...</div>
+            <div id="serverPing" style="margin-top: 5px;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+        
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+        
+        let testInProgress = false;
+        let userLocation = null;
+        let bestServer = null;
+        let detectedConnectionType = 'Unknown';
+        let detectedNetworkTech = 'Unknown';
+        
+        // Server database
+        const testServers = [
+            { 
+                id: 'london', 
+                name: "London, UK", 
+                pingUrl: "https://httpbin.org/delay/0.1",
+                country: "GB",
+                city: "London",
+                lat: 51.5074,
+                lon: -0.1278,
+            },
+            { 
+                id: 'frankfurt', 
+                name: "Frankfurt, Germany", 
+                pingUrl: "http://httpbin.org/delay/0",
+                country: "DE",
+                city: "Frankfurt",
+                lat: 50.1109,
+                lon: 8.6821,
+            },
+            { 
+                id: 'newyork', 
+                name: "New York, USA", 
+                pingUrl: "https://httpbin.org/ip",
+                country: "US",
+                city: "New York",
+                lat: 40.7128,
+                lon: -74.0060,
+            },
+            { 
+                id: 'tokyo', 
+                name: "Tokyo, Japan", 
+                pingUrl: "https://api.ipify.org?format=json",
+                country: "JP",
+                city: "Tokyo",
+                lat: 35.6762,
+                lon: 139.6503,
+            },
+        ];
+        
+        // Connection type detection based on speed and latency patterns
+        const networkTypePatterns = {
+            '5G': {
+                minDownload: 100,      // Mbps
+                maxDownload: 2000,
+                minUpload: 10,
+                maxUpload: 100,
+                maxPing: 50,
+                maxJitter: 20,
+                typicalLatency: 10,
+                characteristics: ['Very high download speed', 'Low latency', 'Mobile connection']
+            },
+            '4G/LTE': {
+                minDownload: 10,
+                maxDownload: 100,
+                minUpload: 2,
+                maxUpload: 50,
+                maxPing: 100,
+                maxJitter: 30,
+                typicalLatency: 30,
+                characteristics: ['Good mobile speed', 'Moderate latency']
+            },
+            'Fiber': {
+                minDownload: 50,
+                maxDownload: 1000,
+                minUpload: 50,         // Symmetrical speeds
+                maxUpload: 1000,
+                maxPing: 30,
+                maxJitter: 10,
+                typicalLatency: 5,
+                characteristics: ['High symmetrical speeds', 'Very low latency', 'Stable connection']
+            },
+            'Cable': {
+                minDownload: 25,
+                maxDownload: 500,
+                minUpload: 5,
+                maxUpload: 50,
+                maxPing: 40,
+                maxJitter: 15,
+                typicalLatency: 15,
+                characteristics: ['Good download, slower upload', 'Home broadband']
+            },
+            'DSL': {
+                minDownload: 5,
+                maxDownload: 100,
+                minUpload: 1,
+                maxUpload: 20,
+                maxPing: 60,
+                maxJitter: 25,
+                typicalLatency: 25,
+                characteristics: ['Slower speeds', 'Higher latency', 'Traditional broadband']
+            },
+            'WiFi': {
+                minDownload: 10,
+                maxDownload: 300,
+                minUpload: 5,
+                maxUpload: 100,
+                maxPing: 50,
+                maxJitter: 30,
+                typicalLatency: 20,
+                characteristics: ['Variable speeds', 'Wireless connection']
+            },
+            'Satellite': {
+                minDownload: 5,
+                maxDownload: 100,
+                minUpload: 1,
+                maxUpload: 20,
+                minPing: 500,          // Very high latency
+                maxPing: 2000,
+                maxJitter: 100,
+                characteristics: ['High latency', 'Weather affected']
+            }
+        };
+        
+        // Haversine formula for distance calculation
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+        
+        // Improved connection type detection
+        async function detectConnectionType(downloadSpeed, uploadSpeed, ping, jitter) {
+            let connectionInfo = {
+                type: 'Unknown',
+                technology: 'Unknown',
+                confidence: 0,
+                details: []
+            };
+            
+            // First, try to detect using browser API
+            const browserDetection = detectConnectionFromBrowser();
+            if (browserDetection.type !== 'Unknown') {
+                connectionInfo = browserDetection;
+                connectionInfo.details.push('Detected via browser API');
+                connectionInfo.confidence = 70;
+            }
+            
+            // Then refine with speed-based detection
+            const speedDetection = detectConnectionFromSpeed(downloadSpeed, uploadSpeed, ping, jitter);
+            
+            // If speed detection gives higher confidence or browser was unknown, use it
+            if (speedDetection.confidence > connectionInfo.confidence || connectionInfo.type === 'Unknown') {
+                connectionInfo = speedDetection;
+                connectionInfo.details.push('Detected via speed analysis');
+            }
+            
+            // Special handling for mobile networks
+            if (connectionInfo.type === 'Mobile' || connectionInfo.type === '4G' || connectionInfo.type === '5G') {
+                // Check if this could be 5G based on speed characteristics
+                if (downloadSpeed > 100 && ping < 30 && jitter < 15) {
+                    // Very high speed + low latency = likely 5G
+                    if (connectionInfo.technology !== '5G') {
+                        connectionInfo.technology = '5G';
+                        connectionInfo.details.push('Upgraded to 5G based on speed/latency profile');
+                        connectionInfo.confidence = Math.min(90, connectionInfo.confidence + 20);
+                    }
+                } else if (downloadSpeed > 200 && ping < 20) {
+                    // Ultra-fast speeds = almost certainly 5G
+                    connectionInfo.technology = '5G';
+                    connectionInfo.type = '5G';
+                    connectionInfo.confidence = 95;
+                    connectionInfo.details.push('Identified as 5G based on ultra-high speed');
+                }
+            }
+            
+            return connectionInfo;
+        }
+        
+        function detectConnectionFromBrowser() {
+            const info = {
+                type: 'Unknown',
+                technology: 'Unknown',
+                confidence: 0,
+                details: []
+            };
+            
+            if (!('connection' in navigator)) {
+                info.details.push('No browser connection API available');
+                return info;
+            }
+            
+            const conn = navigator.connection;
+            
+            // Type detection
+            if (conn.type) {
+                info.type = conn.type;
+                info.confidence = 60;
+                info.details.push(`Browser reports type: ${conn.type}`);
+            }
+            
+            // Effective type (3g, 4g, etc.)
+            if (conn.effectiveType) {
+                info.technology = conn.effectiveType.toUpperCase();
+                info.confidence = Math.max(info.confidence, 50);
+                info.details.push(`Browser reports effective type: ${conn.effectiveType}`);
+                
+                // Map effectiveType to our technology names
+                if (conn.effectiveType.includes('4g')) {
+                    info.technology = '4G/LTE';
+                } else if (conn.effectiveType.includes('3g')) {
+                    info.technology = '3G';
+                } else if (conn.effectiveType.includes('2g')) {
+                    info.technology = '2G';
+                }
+            }
+            
+            // Save bandwidth info for later use
+            if (conn.downlink) {
+                info.details.push(`Estimated downlink: ${conn.downlink} Mbps`);
+            }
+            
+            // Detect if it's cellular
+            if (conn.type === 'cellular' || conn.effectiveType) {
+                info.type = 'Mobile';
+                
+                // Try to detect 5G - browser often mislabels it as 4G
+                if (conn.effectiveType && conn.effectiveType === '4g') {
+                    info.details.push('Browser reports 4G (may be 5G mislabeled)');
+                }
+            }
+            
+            // Detect WiFi
+            if (conn.type === 'wifi' || conn.type === 'wimax') {
+                info.type = 'WiFi';
+                info.technology = 'WiFi';
+            }
+            
+            // Detect Ethernet
+            if (conn.type === 'ethernet') {
+                info.type = 'Wired';
+                info.technology = 'Ethernet';
+            }
+            
+            return info;
+        }
+        
+        function detectConnectionFromSpeed(downloadSpeed, uploadSpeed, ping, jitter) {
+            const info = {
+                type: 'Unknown',
+                technology: 'Unknown',
+                confidence: 0,
+                details: []
+            };
+            
+            // Check against each network type pattern
+            let bestMatch = null;
+            let bestScore = 0;
+            
+            for (const [tech, pattern] of Object.entries(networkTypePatterns)) {
+                let score = 0;
+                let matches = [];
+                
+                // Download speed match
+                if (downloadSpeed >= pattern.minDownload && downloadSpeed <= pattern.maxDownload) {
+                    score += 25;
+                    matches.push(`Download speed matches ${tech} range`);
+                } else if (downloadSpeed > pattern.maxDownload) {
+                    score += 15; // Could be faster than typical but still possible
+                    matches.push(`Download speed higher than typical ${tech}`);
+                }
+                
+                // Upload speed match
+                if (uploadSpeed >= pattern.minUpload && uploadSpeed <= pattern.maxUpload) {
+                    score += 20;
+                    matches.push(`Upload speed matches ${tech} range`);
+                }
+                
+                // Ping/latency match
+                if (ping <= pattern.maxPing) {
+                    score += 30;
+                    matches.push(`Latency matches ${tech}`);
+                }
+                
+                // Jitter match
+                if (jitter <= pattern.maxJitter) {
+                    score += 15;
+                    matches.push(`Jitter matches ${tech}`);
+                }
+                
+                // Check for symmetrical speeds (indicator of fiber)
+                if (tech === 'Fiber') {
+                    const ratio = uploadSpeed / downloadSpeed;
+                    if (ratio > 0.3 && ratio < 3) { // Roughly symmetrical
+                        score += 20;
+                        matches.push('Symmetrical speeds suggest fiber');
+                    }
+                }
+                
+                // Check for high latency (indicator of satellite)
+                if (tech === 'Satellite' && ping > 500) {
+                    score += 40;
+                    matches.push('Very high latency suggests satellite');
+                }
+                
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = {
+                        tech: tech,
+                        score: score,
+                        matches: matches
+                    };
+                }
+            }
+            
+            if (bestMatch && bestMatch.score > 30) {
+                info.technology = bestMatch.tech;
+                info.confidence = Math.min(90, bestMatch.score);
+                info.details = bestMatch.matches;
+                
+                // Map technology to type
+                if (bestMatch.tech === '5G' || bestMatch.tech === '4G/LTE') {
+                    info.type = 'Mobile';
+                } else if (bestMatch.tech === 'WiFi') {
+                    info.type = 'WiFi';
+                } else if (bestMatch.tech === 'Fiber' || bestMatch.tech === 'Cable' || bestMatch.tech === 'DSL') {
+                    info.type = 'Wired';
+                } else if (bestMatch.tech === 'Satellite') {
+                    info.type = 'Satellite';
+                }
+            }
+            
+            return info;
+        }
+        
+        async function detectUserLocation() {
+            let locationData = {
+                country: 'Unknown',
+                city: 'Unknown',
+                region: 'Unknown',
+                latitude: null,
+                longitude: null,
+                isp: 'Unknown',
+                method: 'unknown',
+                countryCode: 'Unknown'
+            };
+            
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                if (response.ok) {
+                    const data = await response.json();
+                    locationData.country = data.country_name || 'Unknown';
+                    locationData.countryCode = data.country_code || 'Unknown';
+                    locationData.city = data.city || 'Unknown';
+                    locationData.region = data.region || 'Unknown';
+                    locationData.latitude = data.latitude;
+                    locationData.longitude = data.longitude;
+                    locationData.isp = data.org || data.asn || 'Unknown ISP';
+                    locationData.method = 'ip_geolocation';
+                }
+            } catch (error) {
+                // Fallback detection
+                const browserLanguage = navigator.language || 'en-US';
+                const countryCode = browserLanguage.split('-')[1] || 'US';
+                locationData.countryCode = countryCode;
+                locationData.method = 'browser_language';
+            }
+            
+            return locationData;
+        }
+        
+        async function findBestServer(userLocation) {
+            let candidates = [];
+            
+            // Calculate distance to each server if we have coordinates
+            if (userLocation.latitude && userLocation.longitude) {
+                testServers.forEach(server => {
+                    const distance = calculateDistance(
+                        userLocation.latitude,
+                        userLocation.longitude,
+                        server.lat,
+                        server.lon
+                    );
+                    
+                    candidates.push({
+                        server: server,
+                        distance: distance
+                    });
+                });
+                
+                // Sort by distance
+                candidates.sort((a, b) => a.distance - b.distance);
+            } else {
+                // Use all servers
+                candidates = testServers.map(server => ({ server, distance: null }));
+            }
+            
+            // Test the closest servers
+            let bestServer = null;
+            let bestPing = Infinity;
+            
+            for (let i = 0; i < Math.min(3, candidates.length); i++) {
+                const candidate = candidates[i];
+                
+                try {
+                    const ping = await testServerPing(candidate.server.pingUrl);
+                    
+                    if (ping < bestPing) {
+                        bestPing = ping;
+                        bestServer = candidate.server;
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                } catch (error) {
+                    continue;
+                }
+            }
+            
+            return bestServer || candidates[0]?.server || testServers[0];
+        }
+        
+        async function testServerPing(pingUrl) {
+            let pings = [];
+            
+            for (let i = 0; i < 2; i++) {
+                try {
+                    const startTime = performance.now();
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 2000);
+                    
+                    await fetch(pingUrl, {
+                        signal: controller.signal,
+                        cache: 'no-store',
+                        mode: 'cors'
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    const endTime = performance.now();
+                    pings.push(endTime - startTime);
+                    
+                } catch (error) {
+                    pings.push(200);
+                }
+            }
+            
+            return Math.min(...pings);
+        }
+        
+        function getConnectionBadge(type, tech) {
+            let badgeClass = 'badge-unknown';
+            let badgeText = tech || type;
+            
+            if (tech === '5G') {
+                badgeClass = 'badge-5g';
+                badgeText = '5G';
+            } else if (tech === '4G/LTE' || tech === '4G') {
+                badgeClass = 'badge-4g';
+                badgeText = '4G/LTE';
+            } else if (type === 'WiFi' || tech === 'WiFi') {
+                badgeClass = 'badge-wifi';
+                badgeText = 'WiFi';
+            } else if (tech === 'Ethernet' || type === 'Wired') {
+                badgeClass = 'badge-ethernet';
+                badgeText = 'Ethernet';
+            } else if (tech === '3G') {
+                badgeClass = 'badge-4g'; // Reuse 4g style
+                badgeText = '3G';
+            }
+            
+            return `<span class="connection-badge ${badgeClass}">${badgeText}</span>`;
+        }
+        
+        async function startSpeedTest() {
+            if (testInProgress) return;
+            
+            const resultDiv = document.getElementById('speedResult');
+            const testButton = document.getElementById('testButton');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const statusMessage = document.getElementById('statusMessage');
+            const serverTesting = document.getElementById('serverTesting');
+            
+            // Reset UI
+            testInProgress = true;
+            testButton.disabled = true;
+            testButton.textContent = 'Testing in Progress...';
+            resultDiv.style.display = 'none';
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            serverTesting.style.display = 'block';
+            
+            // Reset stage indicators
+            document.querySelectorAll('.test-stage').forEach(stage => {
+                stage.classList.remove('active');
+            });
+            
+            try {
+                // Stage 1: Find user location and best server
+                updateStage('stageLocation');
+                statusMessage.textContent = 'Detecting your location and finding nearest server...';
+                progressBar.style.width = '10%';
+                
+                userLocation = await detectUserLocation();
+                bestServer = await findBestServer(userLocation);
+                
+                // Update location display
+                let locationText = '';
+                if (userLocation.city !== 'Unknown') locationText += userLocation.city;
+                if (userLocation.country !== 'Unknown') {
+                    if (locationText) locationText += ', ';
+                    locationText += userLocation.country;
+                }
+                
+                document.getElementById('detectedLocation').innerHTML = 
+                    `<strong>Your Location:</strong> ${locationText || 'Detected from connection data'}`;
+                
+                document.getElementById('serverInfo').textContent = 
+                    `Testing against nearest server: ${bestServer.name}`;
+                document.getElementById('serverLocation').innerHTML = 
+                    `<strong>Test Server:</strong> ${bestServer.name} (${bestServer.country})`;
+                
+                if (userLocation.isp !== 'Unknown' && userLocation.isp !== 'Unknown ISP') {
+                    document.getElementById('ispInfo').innerHTML = `<strong>ISP:</strong> ${userLocation.isp}`;
+                }
+                
+                // Stage 2: Detailed latency test
+                updateStage('stagePing');
+                statusMessage.textContent = 'Measuring connection quality...';
+                progressBar.style.width = '25%';
+                
+                const latencyResults = await performLatencyTest();
+                document.getElementById('pingValue').textContent = latencyResults.ping + ' ms';
+                document.getElementById('jitterValue').textContent = latencyResults.jitter + ' ms';
+                updateQualityIndicators(latencyResults);
+                
+                // Stage 3: Download speed test
+                updateStage('stageDownload');
+                statusMessage.textContent = 'Testing download speed...';
+                progressBar.style.width = '50%';
+                
+                const downloadSpeed = await testDownloadSpeed();
+                document.getElementById('downloadSpeed').textContent = downloadSpeed.toFixed(1) + ' Mbps';
+                document.getElementById('speedValue').textContent = downloadSpeed.toFixed(1);
+                progressBar.style.width = '75%';
+                
+                // Stage 4: Upload speed test
+                updateStage('stageUpload');
+                statusMessage.textContent = 'Testing upload speed...';
+                
+                const uploadSpeed = await testUploadSpeed();
+                document.getElementById('uploadSpeed').textContent = uploadSpeed.toFixed(1) + ' Mbps';
+                progressBar.style.width = '90%';
+                
+                // Stage 5: Analyze connection type
+                updateStage('stageComplete');
+                statusMessage.textContent = 'Analyzing connection type...';
+                progressBar.style.width = '100%';
+                
+                // Detect connection type based on measured performance
+                const connectionInfo = await detectConnectionType(
+                    downloadSpeed,
+                    uploadSpeed,
+                    latencyResults.ping,
+                    latencyResults.jitter
+                );
+                
+                detectedConnectionType = connectionInfo.type;
+                detectedNetworkTech = connectionInfo.technology;
+                
+                // Update connection info display
+                const badge = getConnectionBadge(connectionInfo.type, connectionInfo.technology);
+                document.getElementById('connectionType').innerHTML = 
+                    `<strong>Connection Type:</strong> ${connectionInfo.type} ${badge}`;
+                
+                document.getElementById('networkType').innerHTML = 
+                    `<strong>Network Technology:</strong> ${connectionInfo.technology}`;
+                
+                // Add confidence indicator
+                if (connectionInfo.confidence > 70) {
+                    document.getElementById('connectionAccuracy').innerHTML = 
+                        `<strong>Detection Confidence:</strong> High (${connectionInfo.confidence}%)`;
+                } else if (connectionInfo.confidence > 40) {
+                    document.getElementById('connectionAccuracy').innerHTML = 
+                        `<strong>Detection Confidence:</strong> Moderate (${connectionInfo.confidence}%)`;
+                } else {
+                    document.getElementById('connectionAccuracy').innerHTML = 
+                        `<strong>Detection Confidence:</strong> Low - using best estimate`;
+                }
+                
+                // Update final speed rating
+                updateSpeedDisplay(downloadSpeed);
+                
+                // Show results
+                setTimeout(() => {
+                    resultDiv.style.display = 'block';
+                    progressContainer.style.display = 'none';
+                    serverTesting.style.display = 'none';
+                    testButton.disabled = false;
+                    testButton.textContent = 'Run New Test';
+                    testInProgress = false;
+                    statusMessage.textContent = 'Test complete! Run again to verify results.';
+                }, 800);
+                
+            } catch (error) {
+                statusMessage.textContent = 'Test failed. Please check your connection and try again.';
+                console.error('Speed test error:', error);
+                testButton.disabled = false;
+                testButton.textContent = 'Start Speed Test';
+                testInProgress = false;
+                progressContainer.style.display = 'none';
+                serverTesting.style.display = 'none';
+            }
+        }
+        
+        function updateStage(stageId) {
+            document.querySelectorAll('.test-stage').forEach(stage => {
+                stage.classList.remove('active');
+            });
+            document.getElementById(stageId).classList.add('active');
+        }
+        
+        async function performLatencyTest() {
+            let pings = [];
+            
+            for (let i = 0; i < 3; i++) {
+                try {
+                    const ping = await testServerPing(bestServer.pingUrl);
+                    pings.push(ping);
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                } catch (error) {
+                    pings.push(100);
+                }
+            }
+            
+            const avgPing = pings.reduce((a, b) => a + b, 0) / pings.length;
+            
+            // Calculate jitter
+            let jitter = 0;
+            if (pings.length > 1) {
+                let differences = [];
+                for (let i = 1; i < pings.length; i++) {
+                    differences.push(Math.abs(pings[i] - pings[i - 1]));
+                }
+                jitter = differences.reduce((a, b) => a + b, 0) / differences.length;
+            }
+            
+            return {
+                ping: Math.round(avgPing),
+                jitter: Math.round(jitter * 10) / 10
+            };
+        }
+        
+        async function testDownloadSpeed() {
+            // Test with multiple methods
+            let speeds = [];
+            
+            // Method 1: GitHub raw file
+            try {
+                const startTime = performance.now();
+                const response = await fetch('https://raw.githubusercontent.com/git/git/master/README.md' + `?t=${Date.now()}`, {
+                    cache: 'no-store',
+                    mode: 'cors'
+                });
+                const blob = await response.blob();
+                const endTime = performance.now();
+                
+                const duration = (endTime - startTime) / 1000;
+                const speedMbps = (blob.size * 8) / (1024 * 1024) / duration;
+                
+                if (speedMbps > 0.1 && speedMbps < 2000) {
+                    speeds.push(speedMbps);
+                }
+            } catch (error) {
+                // Continue to next method
+            }
+            
+            // Method 2: httpbin
+            try {
+                const startTime = performance.now();
+                const response = await fetch('https://httpbin.org/bytes/262144' + `?t=${Date.now()}`, {
+                    cache: 'no-store',
+                    mode: 'cors'
+                });
+                const blob = await response.blob();
+                const endTime = performance.now();
+                
+                const duration = (endTime - startTime) / 1000;
+                const speedMbps = (blob.size * 8) / (1024 * 1024) / duration;
+                
+                if (speedMbps > 0.1 && speedMbps < 2000) {
+                    speeds.push(speedMbps);
+                }
+            } catch (error) {
+                // Continue
+            }
+            
+            if (speeds.length === 0) return 10;
+            return speeds.reduce((a, b) => a + b, 0) / speeds.length;
+        }
+        
+        async function testUploadSpeed() {
+            try {
+                const testData = 'x'.repeat(50 * 1024); // 50KB
+                
+                const startTime = performance.now();
+                const response = await fetch('https://httpbin.org/post', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: testData,
+                    mode: 'cors'
+                });
+                
+                await response.json();
+                const endTime = performance.now();
+                
+                const duration = (endTime - startTime) / 1000;
+                const speedMbps = (testData.length * 8) / (1024 * 1024) / duration;
+                
+                return Math.max(0.5, speedMbps);
+                
+            } catch (error) {
+                const downloadSpeed = parseFloat(document.getElementById('downloadSpeed').textContent) || 10;
+                return Math.max(1, downloadSpeed * 0.2);
+            }
+        }
+        
+        function updateSpeedDisplay(speed) {
+            const speedValue = document.getElementById('speedValue');
+            const speedStatus = document.getElementById('speedStatus');
+            
+            speedValue.className = 'speed-value ';
+            
+            if (speed > 100) {
+                speedValue.classList.add('speed-good');
+                speedStatus.textContent = 'Excellent Connection';
+                speedStatus.style.color = '#2E7D32';
+            } else if (speed > 50) {
+                speedValue.classList.add('speed-good');
+                speedStatus.textContent = 'Very Good Connection';
+                speedStatus.style.color = '#2E7D32';
+            } else if (speed > 25) {
+                speedValue.classList.add('speed-medium');
+                speedStatus.textContent = 'Good Connection';
+                speedStatus.style.color = '#FF9800';
+            } else if (speed > 10) {
+                speedValue.classList.add('speed-medium');
+                speedStatus.textContent = 'Fair Connection';
+                speedStatus.style.color = '#FF9800';
+            } else if (speed > 3) {
+                speedValue.classList.add('speed-slow');
+                speedStatus.textContent = 'Slow Connection';
+                speedStatus.style.color = '#F44336';
+            } else {
+                speedValue.classList.add('speed-slow');
+                speedStatus.textContent = 'Very Slow Connection';
+                speedStatus.style.color = '#F44336';
+            }
+            
+            speedValue.innerHTML = `${speed.toFixed(1)} <span style="font-size: 0.5em;">Mbps</span>`;
+        }
+        
+        function updateQualityIndicators(results) {
+            const pingQuality = document.getElementById('pingQuality');
+            if (results.ping < 30) {
+                pingQuality.textContent = 'Excellent';
+                pingQuality.style.color = '#2E7D32';
+            } else if (results.ping < 60) {
+                pingQuality.textContent = 'Good';
+                pingQuality.style.color = '#FF9800';
+            } else if (results.ping < 100) {
+                pingQuality.textContent = 'Fair';
+                pingQuality.style.color = '#FF9800';
+            } else {
+                pingQuality.textContent = 'Poor';
+                pingQuality.style.color = '#F44336';
+            }
+            
+            const jitterQuality = document.getElementById('jitterQuality');
+            if (results.jitter < 5) {
+                jitterQuality.textContent = 'Excellent';
+                jitterQuality.style.color = '#2E7D32';
+            } else if (results.jitter < 10) {
+                jitterQuality.textContent = 'Good';
+                jitterQuality.style.color = '#FF9800';
+            } else if (results.jitter < 20) {
+                jitterQuality.textContent = 'Fair';
+                jitterQuality.style.color = '#FF9800';
+            } else {
+                jitterQuality.textContent = 'Poor';
+                jitterQuality.style.color = '#F44336';
+            }
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', () => {
+            // Show initial connection info if available
+            if ('connection' in navigator) {
+                const conn = navigator.connection;
+                let info = '';
+                
+                if (conn.effectiveType) {
+                    info = `Browser reports: ${conn.effectiveType.toUpperCase()}`;
+                }
+                if (conn.downlink) {
+                    info += info ? ` (${conn.downlink} Mbps)` : `Estimated: ${conn.downlink} Mbps`;
+                }
+                
+                if (info) {
+                    document.getElementById('statusMessage').textContent = info;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
