@@ -327,9 +327,109 @@
         .badge-5g { background: #9C27B0; color: white; }
         .badge-ethernet { background: #795548; color: white; }
         .badge-unknown { background: #9E9E9E; color: white; }
+        
+        /* Test indicators */
+        .test-indicator {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .dark-mode .test-indicator {
+            color: #ccc;
+        }
+        
+        /* Simplified Preloader styles */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-light);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+        
+        .dark-mode .preloader {
+            background: var(--bg-dark);
+        }
+        
+        .preloader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .preloader-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .loading-text {
+            font-size: 1.4em;
+            color: var(--text-dark);
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        
+        .dark-mode .loading-text {
+            color: var(--text-light);
+        }
+        
+        .spinner-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        
+        .spinner {
+            width: 120px;
+            height: 120px;
+            border: 8px solid rgba(76, 175, 80, 0.2);
+            border-top: 8px solid var(--green-primary);
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+        }
+        
+        .spinner-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--green-dark);
+        }
+        
+        .dark-mode .spinner-percentage {
+            color: var(--green-light);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <div class="preloader" id="preloader">
+        <div class="preloader-content">
+            <div class="loading-text">Please wait while the test loads...</div>
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <div class="spinner-percentage" id="loadingPercentage">0%</div>
+            </div>
+        </div>
+    </div>
+    
     <button class="theme-toggle" onclick="toggleTheme()">Toggle Light/Dark</button>
     
     <div class="container">
@@ -426,125 +526,82 @@
             document.body.classList.add('dark-mode');
         }
         
+        // Location cache
+        const LOCATION_CACHE_KEY = 'speedtest_location_cache';
+        const LOCATION_CACHE_TTL = 30 * 60 * 1000;
+        
         let testInProgress = false;
         let userLocation = null;
         let bestServer = null;
         let detectedConnectionType = 'Unknown';
         let detectedNetworkTech = 'Unknown';
+        let loadingProgress = 0;
         
-        // Server database
+        // Improved Server database with better test endpoints
         const testServers = [
             { 
-                id: 'london', 
-                name: "London, UK", 
-                pingUrl: "https://httpbin.org/delay/0.1",
-                country: "GB",
-                city: "London",
-                lat: 51.5074,
-                lon: -0.1278,
+                id: 'cdn1', 
+                name: "Global CDN", 
+                pingUrl: "https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js",
+                downloadUrl: "https://speed.cloudflare.com/__down?bytes=10000000", // 10MB
+                uploadUrl: "https://httpbin.org/post",
+                country: "Global",
+                city: "CDN Edge",
+                lat: null,
+                lon: null,
             },
             { 
-                id: 'frankfurt', 
-                name: "Frankfurt, Germany", 
-                pingUrl: "http://httpbin.org/delay/0",
-                country: "DE",
-                city: "Frankfurt",
-                lat: 50.1109,
-                lon: 8.6821,
-            },
-            { 
-                id: 'newyork', 
-                name: "New York, USA", 
-                pingUrl: "https://httpbin.org/ip",
+                id: 'github', 
+                name: "GitHub USA", 
+                pingUrl: "https://raw.githubusercontent.com/git/git/master/README.md",
+                downloadUrl: "https://raw.githubusercontent.com/torvalds/linux/master/README",
+                uploadUrl: "https://httpbin.org/post",
                 country: "US",
-                city: "New York",
-                lat: 40.7128,
-                lon: -74.0060,
+                city: "San Francisco",
+                lat: 37.7749,
+                lon: -122.4194,
             },
             { 
-                id: 'tokyo', 
-                name: "Tokyo, Japan", 
-                pingUrl: "https://api.ipify.org?format=json",
-                country: "JP",
-                city: "Tokyo",
-                lat: 35.6762,
-                lon: 139.6503,
+                id: 'cloudflare', 
+                name: "Cloudflare Global", 
+                pingUrl: "https://1.1.1.1/cdn-cgi/trace",
+                downloadUrl: "https://speed.cloudflare.com/__down?bytes=5000000", // 5MB
+                uploadUrl: "https://httpbin.org/post",
+                country: "Global",
+                city: "Anycast",
+                lat: null,
+                lon: null,
             },
+            { 
+                id: 'jsdelivr', 
+                name: "jsDelivr CDN", 
+                pingUrl: "https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js",
+                downloadUrl: "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js",
+                uploadUrl: "https://httpbin.org/post",
+                country: "Global",
+                city: "CDN",
+                lat: null,
+                lon: null,
+            }
         ];
         
-        // Connection type detection based on speed and latency patterns
-        const networkTypePatterns = {
-            '5G': {
-                minDownload: 100,      // Mbps
-                maxDownload: 2000,
-                minUpload: 10,
-                maxUpload: 100,
-                maxPing: 50,
-                maxJitter: 20,
-                typicalLatency: 10,
-                characteristics: ['Very high download speed', 'Low latency', 'Mobile connection']
-            },
-            '4G/LTE': {
-                minDownload: 10,
-                maxDownload: 100,
-                minUpload: 2,
-                maxUpload: 50,
-                maxPing: 100,
-                maxJitter: 30,
-                typicalLatency: 30,
-                characteristics: ['Good mobile speed', 'Moderate latency']
-            },
-            'Fiber': {
-                minDownload: 50,
-                maxDownload: 1000,
-                minUpload: 50,         // Symmetrical speeds
-                maxUpload: 1000,
-                maxPing: 30,
-                maxJitter: 10,
-                typicalLatency: 5,
-                characteristics: ['High symmetrical speeds', 'Very low latency', 'Stable connection']
-            },
-            'Cable': {
-                minDownload: 25,
-                maxDownload: 500,
-                minUpload: 5,
-                maxUpload: 50,
-                maxPing: 40,
-                maxJitter: 15,
-                typicalLatency: 15,
-                characteristics: ['Good download, slower upload', 'Home broadband']
-            },
-            'DSL': {
-                minDownload: 5,
-                maxDownload: 100,
-                minUpload: 1,
-                maxUpload: 20,
-                maxPing: 60,
-                maxJitter: 25,
-                typicalLatency: 25,
-                characteristics: ['Slower speeds', 'Higher latency', 'Traditional broadband']
-            },
-            'WiFi': {
-                minDownload: 10,
-                maxDownload: 300,
-                minUpload: 5,
-                maxUpload: 100,
-                maxPing: 50,
-                maxJitter: 30,
-                typicalLatency: 20,
-                characteristics: ['Variable speeds', 'Wireless connection']
-            },
-            'Satellite': {
-                minDownload: 5,
-                maxDownload: 100,
-                minUpload: 1,
-                maxUpload: 20,
-                minPing: 500,          // Very high latency
-                maxPing: 2000,
-                maxJitter: 100,
-                characteristics: ['High latency', 'Weather affected']
+        // Update loading progress
+        function updateLoadingProgress(progress) {
+            loadingProgress = Math.min(100, Math.max(0, progress));
+            const percentageEl = document.getElementById('loadingPercentage');
+            
+            percentageEl.textContent = `${Math.round(loadingProgress)}%`;
+            
+            // Update spinner color based on progress
+            const spinner = document.querySelector('.spinner');
+            if (loadingProgress < 30) {
+                spinner.style.borderTopColor = '#FF9800'; // Amber
+            } else if (loadingProgress < 70) {
+                spinner.style.borderTopColor = '#2196F3'; // Blue
+            } else {
+                spinner.style.borderTopColor = '#4CAF50'; // Green
             }
-        };
+        }
         
         // Haversine formula for distance calculation
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -559,7 +616,529 @@
             return R * c;
         }
         
-        // Improved connection type detection
+        // Get cached location
+        function getCachedLocation() {
+            try {
+                const cached = localStorage.getItem(LOCATION_CACHE_KEY);
+                if (!cached) return null;
+                
+                const { data, timestamp } = JSON.parse(cached);
+                const now = Date.now();
+                
+                if (now - timestamp < LOCATION_CACHE_TTL) {
+                    return data;
+                }
+                
+                localStorage.removeItem(LOCATION_CACHE_KEY);
+                return null;
+            } catch (error) {
+                return null;
+            }
+        }
+        
+        // Cache location data
+        function cacheLocationData(locationData) {
+            try {
+                const cacheData = {
+                    data: locationData,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(cacheData));
+            } catch (error) {
+                // Ignore caching errors
+            }
+        }
+        
+        // Fast location detection
+        async function detectUserLocation() {
+            updateLoadingProgress(40);
+            
+            // Check cache first
+            const cached = getCachedLocation();
+            if (cached) {
+                updateLoadingProgress(50);
+                await new Promise(resolve => setTimeout(resolve, 300));
+                return cached;
+            }
+            
+            let locationData = {
+                country: 'Unknown',
+                city: 'Unknown',
+                region: 'Unknown',
+                latitude: null,
+                longitude: null,
+                isp: 'Unknown',
+                method: 'unknown',
+                countryCode: 'Unknown'
+            };
+            
+            try {
+                updateLoadingProgress(55);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                
+                const response = await fetch('https://ipapi.co/json/', {
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    updateLoadingProgress(65);
+                    const data = await response.json();
+                    locationData.country = data.country_name || 'Unknown';
+                    locationData.countryCode = data.country_code || 'Unknown';
+                    locationData.city = data.city || 'Unknown';
+                    locationData.region = data.region || 'Unknown';
+                    locationData.latitude = data.latitude;
+                    locationData.longitude = data.longitude;
+                    locationData.isp = data.org || data.asn || 'Unknown ISP';
+                    locationData.method = 'ip_geolocation';
+                    
+                    updateLoadingProgress(70);
+                    cacheLocationData(locationData);
+                }
+            } catch (error) {
+                updateLoadingProgress(60);
+                // Fallback detection
+                const browserLanguage = navigator.language || 'en-US';
+                const countryCode = browserLanguage.split('-')[1] || 'US';
+                locationData.countryCode = countryCode;
+                locationData.method = 'browser_language';
+            }
+            
+            return locationData;
+        }
+        
+        async function findBestServer(userLocation) {
+            updateLoadingProgress(75);
+            
+            let candidates = [];
+            
+            if (userLocation.latitude && userLocation.longitude) {
+                // Filter servers that have coordinates
+                const serversWithCoords = testServers.filter(s => s.lat && s.lon);
+                serversWithCoords.forEach(server => {
+                    const distance = calculateDistance(
+                        userLocation.latitude,
+                        userLocation.longitude,
+                        server.lat,
+                        server.lon
+                    );
+                    
+                    candidates.push({
+                        server: server,
+                        distance: distance
+                    });
+                });
+                
+                candidates.sort((a, b) => a.distance - b.distance);
+            } else {
+                // Use all servers
+                candidates = testServers.map(server => ({ server, distance: null }));
+            }
+            
+            // Test the closest servers
+            let bestServer = null;
+            let bestPing = Infinity;
+            
+            for (let i = 0; i < Math.min(3, candidates.length); i++) {
+                const candidate = candidates[i];
+                updateLoadingProgress(80 + (i * 5));
+                
+                try {
+                    const ping = await testServerPing(candidate.server.pingUrl);
+                    
+                    if (ping < bestPing) {
+                        bestPing = ping;
+                        bestServer = candidate.server;
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                } catch (error) {
+                    continue;
+                }
+            }
+            
+            updateLoadingProgress(95);
+            
+            return bestServer || candidates[0]?.server || testServers[0];
+        }
+        
+        // IMPROVED: Better ping test with multiple attempts
+        async function testServerPing(pingUrl) {
+            let pings = [];
+            
+            for (let i = 0; i < 4; i++) {
+                try {
+                    const startTime = performance.now();
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+                    
+                    await fetch(pingUrl, {
+                        signal: controller.signal,
+                        cache: 'no-cache',
+                        mode: 'no-cors',
+                        headers: {
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        }
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    const endTime = performance.now();
+                    const ping = endTime - startTime;
+                    
+                    // Only accept reasonable pings
+                    if (ping > 1 && ping < 2000) {
+                        pings.push(ping);
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                } catch (error) {
+                    pings.push(100); // Default fallback
+                }
+            }
+            
+            if (pings.length === 0) return 100;
+            
+            // Return median ping for stability
+            pings.sort((a, b) => a - b);
+            return pings[Math.floor(pings.length / 2)];
+        }
+        
+        // IMPROVED: Much better download speed test
+        async function testDownloadSpeed() {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = 'Testing download speed...';
+            
+            let speeds = [];
+            const testDuration = 4000; // Test for 4 seconds
+            const parallelConnections = 4; // Use 4 parallel connections
+            
+            // Try multiple servers for better accuracy
+            const downloadServers = [
+                { url: "https://speed.cloudflare.com/__down?bytes=10000000", size: 10000000 }, // 10MB
+                { url: "https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js", size: 89513 }, // jQuery
+                { url: "https://raw.githubusercontent.com/torvalds/linux/master/README", size: 37000 }, // Linux README
+                { url: "https://httpbin.org/bytes/1000000", size: 1000000 } // 1MB from httpbin
+            ];
+            
+            for (const server of downloadServers) {
+                try {
+                    statusMessage.textContent = `Testing download from ${server.url.includes('cloudflare') ? 'Cloudflare' : server.url.includes('github') ? 'GitHub' : 'CDN'}...`;
+                    
+                    const speed = await measureDownloadSpeed(server.url, server.size, testDuration, parallelConnections);
+                    
+                    if (speed > 0.1 && speed < 5000) { // Reasonable bounds
+                        speeds.push(speed);
+                    }
+                    
+                    if (speeds.length >= 2) break; // Get results from 2 servers
+                    
+                } catch (error) {
+                    continue;
+                }
+            }
+            
+            if (speeds.length === 0) {
+                // Fallback to single connection test
+                return await simpleDownloadTest();
+            }
+            
+            // Return average of valid speeds
+            const averageSpeed = speeds.reduce((a, b) => a + b, 0) / speeds.length;
+            return Math.round(averageSpeed * 10) / 10; // Round to 1 decimal
+        }
+        
+        async function measureDownloadSpeed(url, fileSize, duration, connections) {
+            const startTime = performance.now();
+            let totalBytes = 0;
+            let activeConnections = 0;
+            
+            return new Promise((resolve, reject) => {
+                const connectionPromises = [];
+                
+                for (let i = 0; i < connections; i++) {
+                    connectionPromises.push(
+                        fetch(url + `?nocache=${Date.now()}-${i}`, {
+                            cache: 'no-store',
+                            mode: 'cors',
+                            headers: {
+                                'Cache-Control': 'no-cache',
+                                'Pragma': 'no-cache'
+                            }
+                        }).then(async response => {
+                            const reader = response.body.getReader();
+                            let bytesReceived = 0;
+                            
+                            while (performance.now() - startTime < duration) {
+                                const { done, value } = await reader.read();
+                                if (done) break;
+                                bytesReceived += value.length;
+                                totalBytes += value.length;
+                            }
+                            
+                            reader.cancel();
+                            return bytesReceived;
+                        }).catch(error => {
+                            return 0;
+                        })
+                    );
+                }
+                
+                // Monitor progress
+                const progressInterval = setInterval(() => {
+                    const elapsed = performance.now() - startTime;
+                    if (elapsed >= duration) {
+                        clearInterval(progressInterval);
+                        
+                        // Calculate speed
+                        const speedMbps = (totalBytes * 8) / (duration / 1000) / (1024 * 1024);
+                        resolve(speedMbps);
+                    }
+                }, 100);
+                
+                // Timeout after duration + buffer
+                setTimeout(() => {
+                    clearInterval(progressInterval);
+                    const elapsed = performance.now() - startTime;
+                    const speedMbps = (totalBytes * 8) / (elapsed / 1000) / (1024 * 1024);
+                    resolve(speedMbps);
+                }, duration + 1000);
+            });
+        }
+        
+        async function simpleDownloadTest() {
+            try {
+                const startTime = performance.now();
+                const response = await fetch('https://speed.cloudflare.com/__down?bytes=5000000' + `?t=${Date.now()}`, {
+                    cache: 'no-store',
+                    mode: 'cors'
+                });
+                const blob = await response.blob();
+                const endTime = performance.now();
+                
+                const duration = (endTime - startTime) / 1000;
+                const speedMbps = (blob.size * 8) / (1024 * 1024) / duration;
+                
+                return Math.max(0.1, speedMbps);
+            } catch (error) {
+                return 10; // Default fallback
+            }
+        }
+        
+        // IMPROVED: Much better upload speed test
+        async function testUploadSpeed() {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = 'Testing upload speed...';
+            
+            let speeds = [];
+            const testDuration = 4000; // Test for 4 seconds
+            
+            // Create larger test data (1MB for upload)
+            const testData = generateTestData(1024 * 1024); // 1MB
+            
+            // Try multiple upload endpoints
+            const uploadEndpoints = [
+                'https://httpbin.org/post',
+                'https://ptsv2.com/t/test/post',
+                'https://echo.zuplo.io/'
+            ];
+            
+            for (const endpoint of uploadEndpoints) {
+                try {
+                    const speed = await measureUploadSpeed(endpoint, testData, testDuration);
+                    
+                    if (speed > 0.1 && speed < 1000) { // Reasonable bounds
+                        speeds.push(speed);
+                    }
+                    
+                    if (speeds.length >= 2) break; // Get results from 2 endpoints
+                    
+                } catch (error) {
+                    continue;
+                }
+            }
+            
+            if (speeds.length === 0) {
+                // Fallback test
+                return await simpleUploadTest();
+            }
+            
+            // Return average of valid speeds
+            const averageSpeed = speeds.reduce((a, b) => a + b, 0) / speeds.length;
+            return Math.round(averageSpeed * 10) / 10; // Round to 1 decimal
+        }
+        
+        function generateTestData(size) {
+            // Generate random test data
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < size; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+        
+        async function measureUploadSpeed(endpoint, testData, duration) {
+            const startTime = performance.now();
+            let totalBytesSent = 0;
+            
+            return new Promise((resolve, reject) => {
+                const sendChunk = async () => {
+                    if (performance.now() - startTime >= duration) {
+                        const elapsed = performance.now() - startTime;
+                        const speedMbps = (totalBytesSent * 8) / (elapsed / 1000) / (1024 * 1024);
+                        resolve(speedMbps);
+                        return;
+                    }
+                    
+                    try {
+                        const chunkSize = Math.min(50000, testData.length); // 50KB chunks
+                        const chunk = testData.substring(0, chunkSize);
+                        
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 5000);
+                        
+                        const response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'text/plain',
+                                'Content-Length': chunk.length.toString()
+                            },
+                            body: chunk,
+                            mode: 'cors',
+                            signal: controller.signal
+                        });
+                        
+                        clearTimeout(timeoutId);
+                        
+                        if (response.ok) {
+                            totalBytesSent += chunk.length;
+                            // Continue sending
+                            setTimeout(sendChunk, 0);
+                        } else {
+                            const elapsed = performance.now() - startTime;
+                            const speedMbps = (totalBytesSent * 8) / (elapsed / 1000) / (1024 * 1024);
+                            resolve(speedMbps);
+                        }
+                    } catch (error) {
+                        const elapsed = performance.now() - startTime;
+                        const speedMbps = (totalBytesSent * 8) / (elapsed / 1000) / (1024 * 1024);
+                        resolve(speedMbps);
+                    }
+                };
+                
+                // Start the upload
+                sendChunk();
+                
+                // Timeout
+                setTimeout(() => {
+                    const elapsed = performance.now() - startTime;
+                    const speedMbps = (totalBytesSent * 8) / (elapsed / 1000) / (1024 * 1024);
+                    resolve(speedMbps);
+                }, duration + 1000);
+            });
+        }
+        
+        async function simpleUploadTest() {
+            try {
+                const testData = generateTestData(500 * 1024); // 500KB
+                
+                const startTime = performance.now();
+                const response = await fetch('https://httpbin.org/post', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: testData,
+                    mode: 'cors'
+                });
+                
+                await response.json();
+                const endTime = performance.now();
+                
+                const duration = (endTime - startTime) / 1000;
+                const speedMbps = (testData.length * 8) / (1024 * 1024) / duration;
+                
+                return Math.max(0.1, speedMbps);
+                
+            } catch (error) {
+                return 2; // Default fallback
+            }
+        }
+        
+        // IMPROVED: Better latency test
+        async function performLatencyTest() {
+            let pings = [];
+            let jitterSamples = [];
+            
+            statusMessage.textContent = 'Measuring latency and jitter...';
+            
+            // Test with multiple sizes to get accurate latency
+            for (let i = 0; i < 8; i++) {
+                try {
+                    const startTime = performance.now();
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 2000);
+                    
+                    // Use a small request for latency testing
+                    await fetch(bestServer.pingUrl + `?size=100&t=${Date.now()}-${i}`, {
+                        signal: controller.signal,
+                        cache: 'no-store',
+                        mode: 'cors',
+                        headers: {
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        }
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    const endTime = performance.now();
+                    const ping = endTime - startTime;
+                    
+                    // Only accept reasonable pings
+                    if (ping > 1 && ping < 2000) {
+                        pings.push(ping);
+                        
+                        // Calculate jitter between consecutive pings
+                        if (pings.length > 1) {
+                            const jitter = Math.abs(pings[pings.length - 1] - pings[pings.length - 2]);
+                            jitterSamples.push(jitter);
+                        }
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                } catch (error) {
+                    pings.push(50); // Default fallback
+                }
+            }
+            
+            if (pings.length === 0) {
+                return { ping: 50, jitter: 5 };
+            }
+            
+            // Calculate median ping for stability
+            pings.sort((a, b) => a - b);
+            const medianPing = pings[Math.floor(pings.length / 2)];
+            
+            // Calculate average jitter
+            let jitter = 1;
+            if (jitterSamples.length > 0) {
+                jitter = jitterSamples.reduce((a, b) => a + b, 0) / jitterSamples.length;
+            }
+            
+            return {
+                ping: Math.round(medianPing),
+                jitter: Math.round(jitter * 10) / 10
+            };
+        }
+        
+        // Rest of the functions remain the same...
         async function detectConnectionType(downloadSpeed, uploadSpeed, ping, jitter) {
             let connectionInfo = {
                 type: 'Unknown',
@@ -568,7 +1147,6 @@
                 details: []
             };
             
-            // First, try to detect using browser API
             const browserDetection = detectConnectionFromBrowser();
             if (browserDetection.type !== 'Unknown') {
                 connectionInfo = browserDetection;
@@ -576,27 +1154,21 @@
                 connectionInfo.confidence = 70;
             }
             
-            // Then refine with speed-based detection
             const speedDetection = detectConnectionFromSpeed(downloadSpeed, uploadSpeed, ping, jitter);
             
-            // If speed detection gives higher confidence or browser was unknown, use it
             if (speedDetection.confidence > connectionInfo.confidence || connectionInfo.type === 'Unknown') {
                 connectionInfo = speedDetection;
                 connectionInfo.details.push('Detected via speed analysis');
             }
             
-            // Special handling for mobile networks
             if (connectionInfo.type === 'Mobile' || connectionInfo.type === '4G' || connectionInfo.type === '5G') {
-                // Check if this could be 5G based on speed characteristics
                 if (downloadSpeed > 100 && ping < 30 && jitter < 15) {
-                    // Very high speed + low latency = likely 5G
                     if (connectionInfo.technology !== '5G') {
                         connectionInfo.technology = '5G';
                         connectionInfo.details.push('Upgraded to 5G based on speed/latency profile');
                         connectionInfo.confidence = Math.min(90, connectionInfo.confidence + 20);
                     }
                 } else if (downloadSpeed > 200 && ping < 20) {
-                    // Ultra-fast speeds = almost certainly 5G
                     connectionInfo.technology = '5G';
                     connectionInfo.type = '5G';
                     connectionInfo.confidence = 95;
@@ -622,20 +1194,17 @@
             
             const conn = navigator.connection;
             
-            // Type detection
             if (conn.type) {
                 info.type = conn.type;
                 info.confidence = 60;
                 info.details.push(`Browser reports type: ${conn.type}`);
             }
             
-            // Effective type (3g, 4g, etc.)
             if (conn.effectiveType) {
                 info.technology = conn.effectiveType.toUpperCase();
                 info.confidence = Math.max(info.confidence, 50);
                 info.details.push(`Browser reports effective type: ${conn.effectiveType}`);
                 
-                // Map effectiveType to our technology names
                 if (conn.effectiveType.includes('4g')) {
                     info.technology = '4G/LTE';
                 } else if (conn.effectiveType.includes('3g')) {
@@ -645,28 +1214,23 @@
                 }
             }
             
-            // Save bandwidth info for later use
             if (conn.downlink) {
                 info.details.push(`Estimated downlink: ${conn.downlink} Mbps`);
             }
             
-            // Detect if it's cellular
             if (conn.type === 'cellular' || conn.effectiveType) {
                 info.type = 'Mobile';
                 
-                // Try to detect 5G - browser often mislabels it as 4G
                 if (conn.effectiveType && conn.effectiveType === '4g') {
                     info.details.push('Browser reports 4G (may be 5G mislabeled)');
                 }
             }
             
-            // Detect WiFi
             if (conn.type === 'wifi' || conn.type === 'wimax') {
                 info.type = 'WiFi';
                 info.technology = 'WiFi';
             }
             
-            // Detect Ethernet
             if (conn.type === 'ethernet') {
                 info.type = 'Wired';
                 info.technology = 'Ethernet';
@@ -683,51 +1247,117 @@
                 details: []
             };
             
-            // Check against each network type pattern
             let bestMatch = null;
             let bestScore = 0;
+            
+            const networkTypePatterns = {
+                '5G': {
+                    minDownload: 100,
+                    maxDownload: 2000,
+                    minUpload: 10,
+                    maxUpload: 100,
+                    maxPing: 50,
+                    maxJitter: 20,
+                    typicalLatency: 10,
+                    characteristics: ['Very high download speed', 'Low latency', 'Mobile connection']
+                },
+                '4G/LTE': {
+                    minDownload: 10,
+                    maxDownload: 100,
+                    minUpload: 2,
+                    maxUpload: 50,
+                    maxPing: 100,
+                    maxJitter: 30,
+                    typicalLatency: 30,
+                    characteristics: ['Good mobile speed', 'Moderate latency']
+                },
+                'Fiber': {
+                    minDownload: 50,
+                    maxDownload: 1000,
+                    minUpload: 50,
+                    maxUpload: 1000,
+                    maxPing: 30,
+                    maxJitter: 10,
+                    typicalLatency: 5,
+                    characteristics: ['High symmetrical speeds', 'Very low latency', 'Stable connection']
+                },
+                'Cable': {
+                    minDownload: 25,
+                    maxDownload: 500,
+                    minUpload: 5,
+                    maxUpload: 50,
+                    maxPing: 40,
+                    maxJitter: 15,
+                    typicalLatency: 15,
+                    characteristics: ['Good download, slower upload', 'Home broadband']
+                },
+                'DSL': {
+                    minDownload: 5,
+                    maxDownload: 100,
+                    minUpload: 1,
+                    maxUpload: 20,
+                    maxPing: 60,
+                    maxJitter: 25,
+                    typicalLatency: 25,
+                    characteristics: ['Slower speeds', 'Higher latency', 'Traditional broadband']
+                },
+                'WiFi': {
+                    minDownload: 10,
+                    maxDownload: 300,
+                    minUpload: 5,
+                    maxUpload: 100,
+                    maxPing: 50,
+                    maxJitter: 30,
+                    typicalLatency: 20,
+                    characteristics: ['Variable speeds', 'Wireless connection']
+                },
+                'Satellite': {
+                    minDownload: 5,
+                    maxDownload: 100,
+                    minUpload: 1,
+                    maxUpload: 20,
+                    minPing: 500,
+                    maxPing: 2000,
+                    maxJitter: 100,
+                    characteristics: ['High latency', 'Weather affected']
+                }
+            };
             
             for (const [tech, pattern] of Object.entries(networkTypePatterns)) {
                 let score = 0;
                 let matches = [];
                 
-                // Download speed match
                 if (downloadSpeed >= pattern.minDownload && downloadSpeed <= pattern.maxDownload) {
                     score += 25;
                     matches.push(`Download speed matches ${tech} range`);
                 } else if (downloadSpeed > pattern.maxDownload) {
-                    score += 15; // Could be faster than typical but still possible
+                    score += 15;
                     matches.push(`Download speed higher than typical ${tech}`);
                 }
                 
-                // Upload speed match
                 if (uploadSpeed >= pattern.minUpload && uploadSpeed <= pattern.maxUpload) {
                     score += 20;
                     matches.push(`Upload speed matches ${tech} range`);
                 }
                 
-                // Ping/latency match
                 if (ping <= pattern.maxPing) {
                     score += 30;
                     matches.push(`Latency matches ${tech}`);
                 }
                 
-                // Jitter match
                 if (jitter <= pattern.maxJitter) {
                     score += 15;
                     matches.push(`Jitter matches ${tech}`);
                 }
                 
-                // Check for symmetrical speeds (indicator of fiber)
                 if (tech === 'Fiber') {
                     const ratio = uploadSpeed / downloadSpeed;
-                    if (ratio > 0.3 && ratio < 3) { // Roughly symmetrical
+                    if (ratio > 0.3 && ratio < 3) {
                         score += 20;
                         matches.push('Symmetrical speeds suggest fiber');
                     }
                 }
                 
-                // Check for high latency (indicator of satellite)
                 if (tech === 'Satellite' && ping > 500) {
                     score += 40;
                     matches.push('Very high latency suggests satellite');
@@ -748,7 +1378,6 @@
                 info.confidence = Math.min(90, bestMatch.score);
                 info.details = bestMatch.matches;
                 
-                // Map technology to type
                 if (bestMatch.tech === '5G' || bestMatch.tech === '4G/LTE') {
                     info.type = 'Mobile';
                 } else if (bestMatch.tech === 'WiFi') {
@@ -761,120 +1390,6 @@
             }
             
             return info;
-        }
-        
-        async function detectUserLocation() {
-            let locationData = {
-                country: 'Unknown',
-                city: 'Unknown',
-                region: 'Unknown',
-                latitude: null,
-                longitude: null,
-                isp: 'Unknown',
-                method: 'unknown',
-                countryCode: 'Unknown'
-            };
-            
-            try {
-                const response = await fetch('https://ipapi.co/json/');
-                if (response.ok) {
-                    const data = await response.json();
-                    locationData.country = data.country_name || 'Unknown';
-                    locationData.countryCode = data.country_code || 'Unknown';
-                    locationData.city = data.city || 'Unknown';
-                    locationData.region = data.region || 'Unknown';
-                    locationData.latitude = data.latitude;
-                    locationData.longitude = data.longitude;
-                    locationData.isp = data.org || data.asn || 'Unknown ISP';
-                    locationData.method = 'ip_geolocation';
-                }
-            } catch (error) {
-                // Fallback detection
-                const browserLanguage = navigator.language || 'en-US';
-                const countryCode = browserLanguage.split('-')[1] || 'US';
-                locationData.countryCode = countryCode;
-                locationData.method = 'browser_language';
-            }
-            
-            return locationData;
-        }
-        
-        async function findBestServer(userLocation) {
-            let candidates = [];
-            
-            // Calculate distance to each server if we have coordinates
-            if (userLocation.latitude && userLocation.longitude) {
-                testServers.forEach(server => {
-                    const distance = calculateDistance(
-                        userLocation.latitude,
-                        userLocation.longitude,
-                        server.lat,
-                        server.lon
-                    );
-                    
-                    candidates.push({
-                        server: server,
-                        distance: distance
-                    });
-                });
-                
-                // Sort by distance
-                candidates.sort((a, b) => a.distance - b.distance);
-            } else {
-                // Use all servers
-                candidates = testServers.map(server => ({ server, distance: null }));
-            }
-            
-            // Test the closest servers
-            let bestServer = null;
-            let bestPing = Infinity;
-            
-            for (let i = 0; i < Math.min(3, candidates.length); i++) {
-                const candidate = candidates[i];
-                
-                try {
-                    const ping = await testServerPing(candidate.server.pingUrl);
-                    
-                    if (ping < bestPing) {
-                        bestPing = ping;
-                        bestServer = candidate.server;
-                    }
-                    
-                    await new Promise(resolve => setTimeout(resolve, 300));
-                    
-                } catch (error) {
-                    continue;
-                }
-            }
-            
-            return bestServer || candidates[0]?.server || testServers[0];
-        }
-        
-        async function testServerPing(pingUrl) {
-            let pings = [];
-            
-            for (let i = 0; i < 2; i++) {
-                try {
-                    const startTime = performance.now();
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 2000);
-                    
-                    await fetch(pingUrl, {
-                        signal: controller.signal,
-                        cache: 'no-store',
-                        mode: 'cors'
-                    });
-                    
-                    clearTimeout(timeoutId);
-                    const endTime = performance.now();
-                    pings.push(endTime - startTime);
-                    
-                } catch (error) {
-                    pings.push(200);
-                }
-            }
-            
-            return Math.min(...pings);
         }
         
         function getConnectionBadge(type, tech) {
@@ -894,13 +1409,14 @@
                 badgeClass = 'badge-ethernet';
                 badgeText = 'Ethernet';
             } else if (tech === '3G') {
-                badgeClass = 'badge-4g'; // Reuse 4g style
+                badgeClass = 'badge-4g';
                 badgeText = '3G';
             }
             
             return `<span class="connection-badge ${badgeClass}">${badgeText}</span>`;
         }
         
+        // Main speed test function
         async function startSpeedTest() {
             if (testInProgress) return;
             
@@ -911,7 +1427,6 @@
             const statusMessage = document.getElementById('statusMessage');
             const serverTesting = document.getElementById('serverTesting');
             
-            // Reset UI
             testInProgress = true;
             testButton.disabled = true;
             testButton.textContent = 'Testing in Progress...';
@@ -920,21 +1435,23 @@
             progressBar.style.width = '0%';
             serverTesting.style.display = 'block';
             
-            // Reset stage indicators
             document.querySelectorAll('.test-stage').forEach(stage => {
                 stage.classList.remove('active');
             });
             
             try {
-                // Stage 1: Find user location and best server
                 updateStage('stageLocation');
                 statusMessage.textContent = 'Detecting your location and finding nearest server...';
                 progressBar.style.width = '10%';
                 
-                userLocation = await detectUserLocation();
-                bestServer = await findBestServer(userLocation);
+                if (!userLocation) {
+                    userLocation = await detectUserLocation();
+                }
                 
-                // Update location display
+                if (!bestServer) {
+                    bestServer = await findBestServer(userLocation);
+                }
+                
                 let locationText = '';
                 if (userLocation.city !== 'Unknown') locationText += userLocation.city;
                 if (userLocation.country !== 'Unknown') {
@@ -954,7 +1471,6 @@
                     document.getElementById('ispInfo').innerHTML = `<strong>ISP:</strong> ${userLocation.isp}`;
                 }
                 
-                // Stage 2: Detailed latency test
                 updateStage('stagePing');
                 statusMessage.textContent = 'Measuring connection quality...';
                 progressBar.style.width = '25%';
@@ -964,7 +1480,6 @@
                 document.getElementById('jitterValue').textContent = latencyResults.jitter + ' ms';
                 updateQualityIndicators(latencyResults);
                 
-                // Stage 3: Download speed test
                 updateStage('stageDownload');
                 statusMessage.textContent = 'Testing download speed...';
                 progressBar.style.width = '50%';
@@ -974,7 +1489,6 @@
                 document.getElementById('speedValue').textContent = downloadSpeed.toFixed(1);
                 progressBar.style.width = '75%';
                 
-                // Stage 4: Upload speed test
                 updateStage('stageUpload');
                 statusMessage.textContent = 'Testing upload speed...';
                 
@@ -982,12 +1496,10 @@
                 document.getElementById('uploadSpeed').textContent = uploadSpeed.toFixed(1) + ' Mbps';
                 progressBar.style.width = '90%';
                 
-                // Stage 5: Analyze connection type
                 updateStage('stageComplete');
                 statusMessage.textContent = 'Analyzing connection type...';
                 progressBar.style.width = '100%';
                 
-                // Detect connection type based on measured performance
                 const connectionInfo = await detectConnectionType(
                     downloadSpeed,
                     uploadSpeed,
@@ -998,7 +1510,6 @@
                 detectedConnectionType = connectionInfo.type;
                 detectedNetworkTech = connectionInfo.technology;
                 
-                // Update connection info display
                 const badge = getConnectionBadge(connectionInfo.type, connectionInfo.technology);
                 document.getElementById('connectionType').innerHTML = 
                     `<strong>Connection Type:</strong> ${connectionInfo.type} ${badge}`;
@@ -1006,7 +1517,6 @@
                 document.getElementById('networkType').innerHTML = 
                     `<strong>Network Technology:</strong> ${connectionInfo.technology}`;
                 
-                // Add confidence indicator
                 if (connectionInfo.confidence > 70) {
                     document.getElementById('connectionAccuracy').innerHTML = 
                         `<strong>Detection Confidence:</strong> High (${connectionInfo.confidence}%)`;
@@ -1018,10 +1528,8 @@
                         `<strong>Detection Confidence:</strong> Low - using best estimate`;
                 }
                 
-                // Update final speed rating
                 updateSpeedDisplay(downloadSpeed);
                 
-                // Show results
                 setTimeout(() => {
                     resultDiv.style.display = 'block';
                     progressContainer.style.display = 'none';
@@ -1048,113 +1556,6 @@
                 stage.classList.remove('active');
             });
             document.getElementById(stageId).classList.add('active');
-        }
-        
-        async function performLatencyTest() {
-            let pings = [];
-            
-            for (let i = 0; i < 3; i++) {
-                try {
-                    const ping = await testServerPing(bestServer.pingUrl);
-                    pings.push(ping);
-                    await new Promise(resolve => setTimeout(resolve, 300));
-                } catch (error) {
-                    pings.push(100);
-                }
-            }
-            
-            const avgPing = pings.reduce((a, b) => a + b, 0) / pings.length;
-            
-            // Calculate jitter
-            let jitter = 0;
-            if (pings.length > 1) {
-                let differences = [];
-                for (let i = 1; i < pings.length; i++) {
-                    differences.push(Math.abs(pings[i] - pings[i - 1]));
-                }
-                jitter = differences.reduce((a, b) => a + b, 0) / differences.length;
-            }
-            
-            return {
-                ping: Math.round(avgPing),
-                jitter: Math.round(jitter * 10) / 10
-            };
-        }
-        
-        async function testDownloadSpeed() {
-            // Test with multiple methods
-            let speeds = [];
-            
-            // Method 1: GitHub raw file
-            try {
-                const startTime = performance.now();
-                const response = await fetch('https://raw.githubusercontent.com/git/git/master/README.md' + `?t=${Date.now()}`, {
-                    cache: 'no-store',
-                    mode: 'cors'
-                });
-                const blob = await response.blob();
-                const endTime = performance.now();
-                
-                const duration = (endTime - startTime) / 1000;
-                const speedMbps = (blob.size * 8) / (1024 * 1024) / duration;
-                
-                if (speedMbps > 0.1 && speedMbps < 2000) {
-                    speeds.push(speedMbps);
-                }
-            } catch (error) {
-                // Continue to next method
-            }
-            
-            // Method 2: httpbin
-            try {
-                const startTime = performance.now();
-                const response = await fetch('https://httpbin.org/bytes/262144' + `?t=${Date.now()}`, {
-                    cache: 'no-store',
-                    mode: 'cors'
-                });
-                const blob = await response.blob();
-                const endTime = performance.now();
-                
-                const duration = (endTime - startTime) / 1000;
-                const speedMbps = (blob.size * 8) / (1024 * 1024) / duration;
-                
-                if (speedMbps > 0.1 && speedMbps < 2000) {
-                    speeds.push(speedMbps);
-                }
-            } catch (error) {
-                // Continue
-            }
-            
-            if (speeds.length === 0) return 10;
-            return speeds.reduce((a, b) => a + b, 0) / speeds.length;
-        }
-        
-        async function testUploadSpeed() {
-            try {
-                const testData = 'x'.repeat(50 * 1024); // 50KB
-                
-                const startTime = performance.now();
-                const response = await fetch('https://httpbin.org/post', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain',
-                    },
-                    body: testData,
-                    mode: 'cors'
-                });
-                
-                await response.json();
-                const endTime = performance.now();
-                
-                const duration = (endTime - startTime) / 1000;
-                const speedMbps = (testData.length * 8) / (1024 * 1024) / duration;
-                
-                return Math.max(0.5, speedMbps);
-                
-            } catch (error) {
-                const downloadSpeed = parseFloat(document.getElementById('downloadSpeed').textContent) || 10;
-                return Math.max(1, downloadSpeed * 0.2);
-            }
         }
         
         function updateSpeedDisplay(speed) {
@@ -1225,23 +1626,66 @@
         }
         
         // Initialize on load
-        window.addEventListener('load', () => {
-            // Show initial connection info if available
-            if ('connection' in navigator) {
-                const conn = navigator.connection;
-                let info = '';
+        window.addEventListener('load', async () => {
+            const preloader = document.getElementById('preloader');
+            const testButton = document.getElementById('testButton');
+            
+            // Initial loading progress
+            updateLoadingProgress(5);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            updateLoadingProgress(15);
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            updateLoadingProgress(25);
+            
+            // Background initialization
+            try {
+                userLocation = await detectUserLocation();
+                bestServer = await findBestServer(userLocation);
                 
-                if (conn.effectiveType) {
-                    info = `Browser reports: ${conn.effectiveType.toUpperCase()}`;
-                }
-                if (conn.downlink) {
-                    info += info ? ` (${conn.downlink} Mbps)` : `Estimated: ${conn.downlink} Mbps`;
+                let locationText = '';
+                if (userLocation.city !== 'Unknown') locationText += userLocation.city;
+                if (userLocation.country !== 'Unknown') {
+                    if (locationText) locationText += ', ';
+                    locationText += userLocation.country;
                 }
                 
-                if (info) {
-                    document.getElementById('statusMessage').textContent = info;
+                if (locationText) {
+                    document.getElementById('serverInfo').innerHTML = 
+                        `Ready to test from <strong>${locationText}</strong> using nearest server`;
                 }
+                
+                // Show initial connection info if available
+                if ('connection' in navigator) {
+                    const conn = navigator.connection;
+                    let info = '';
+                    
+                    if (conn.effectiveType) {
+                        info = `Browser reports: ${conn.effectiveType.toUpperCase()}`;
+                    }
+                    if (conn.downlink) {
+                        info += info ? ` (${conn.downlink} Mbps)` : `Estimated: ${conn.downlink} Mbps`;
+                    }
+                    
+                    if (info) {
+                        document.getElementById('statusMessage').textContent = info;
+                    }
+                }
+                
+                updateLoadingProgress(100);
+                
+            } catch (error) {
+                console.log('Background initialization failed:', error);
+                updateLoadingProgress(100);
             }
+            
+            // Hide preloader after completion
+            setTimeout(() => {
+                preloader.classList.add('hidden');
+                testButton.disabled = false;
+                testButton.textContent = 'Start Speed Test';
+            }, 500);
         });
     </script>
 </body>
