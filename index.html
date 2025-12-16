@@ -20,6 +20,10 @@
             --blue: #2196F3;
             --purple: #9C27B0;
             --teal: #009688;
+            --chart-green: #4CAF50;
+            --chart-blue: #2196F3;
+            --chart-orange: #FF9800;
+            --chart-purple: #9C27B0;
         }
         
         body {
@@ -38,12 +42,12 @@
         }
         
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 30px;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
         
         .dark-mode .container {
@@ -52,15 +56,40 @@
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .dark-mode .header {
+            border-bottom-color: #455A64;
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            color: var(--green-dark);
+        }
+        
+        .dark-mode .header h1 {
+            color: var(--green-light);
+        }
+        
+        .header p {
+            margin: 0;
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .dark-mode .header p {
+            color: #ccc;
         }
         
         .location-info {
             background: var(--green-light);
             padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
+            border-radius: 12px;
+            margin: 30px 0;
             text-align: center;
             font-size: 0.95em;
         }
@@ -104,100 +133,379 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         
-        .server-map {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
-            flex-wrap: wrap;
+        .test-progress-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            display: none;
         }
         
-        .server-pill {
-            background: #e0e0e0;
-            padding: 5px 15px;
+        .dark-mode .test-progress-container {
+            background: #455A64;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .test-progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .test-phase {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .dark-mode .test-phase {
+            color: var(--text-light);
+        }
+        
+        .test-phase-badge {
+            padding: 6px 12px;
             border-radius: 20px;
             font-size: 0.85em;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 2px solid transparent;
+            font-weight: 600;
+            background: var(--green-light);
+            color: var(--green-dark);
         }
         
-        .server-pill:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+        .dark-mode .test-phase-badge {
+            background: #1B5E20;
+            color: var(--green-light);
         }
         
-        .server-pill.testing {
+        .test-phase-badge.testing {
+            background: var(--blue);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .test-phase-badge.completed {
             background: var(--green-primary);
             color: white;
-            transform: scale(1.05);
         }
         
-        .server-pill.selected {
-            background: var(--green-dark);
-            color: white;
-            font-weight: bold;
+        .test-phase-badge.waiting {
+            background: #e0e0e0;
+            color: #666;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .speed-graph-container {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dark-mode .speed-graph-container {
+            background: #37474F;
+        }
+        
+        .speed-graph {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .graph-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .graph-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .dark-mode .graph-overlay {
+            background: rgba(55, 71, 79, 0.9);
+        }
+        
+        .current-speed {
+            font-size: 3em;
+            font-weight: 700;
+            color: var(--green-dark);
+            margin-bottom: 10px;
+        }
+        
+        .dark-mode .current-speed {
+            color: var(--green-light);
+        }
+        
+        .speed-unit {
+            font-size: 1.2em;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .dark-mode .speed-unit {
+            color: #ccc;
+        }
+        
+        .progress-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .progress-detail-card {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .dark-mode .progress-detail-card {
+            background: #37474F;
+        }
+        
+        .progress-detail-card.active {
+            background: var(--green-light);
             border: 2px solid var(--green-primary);
         }
         
-        .server-pill.failed {
-            background: #ffebee;
-            color: #c62828;
-        }
-        
-        .dark-mode .server-pill {
-            background: #455A64;
-        }
-        
-        .dark-mode .server-pill.testing {
-            background: var(--green-primary);
-        }
-        
-        .dark-mode .server-pill.selected {
-            background: var(--green-dark);
-        }
-        
-        .speed-result {
-            display: none;
-            text-align: center;
-            padding: 40px 30px;
-            margin: 20px 0;
-            border-radius: 8px;
-            background: var(--green-light);
-            animation: fadeIn 0.8s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .dark-mode .speed-result {
+        .dark-mode .progress-detail-card.active {
             background: #1B5E20;
+            border-color: var(--green-primary);
         }
         
-        .speed-value {
-            font-size: 3.5em;
-            font-weight: bold;
+        .progress-detail-value {
+            font-size: 2em;
+            font-weight: 700;
             margin: 10px 0;
             color: var(--text-dark);
         }
         
-        .dark-mode .speed-value {
+        .dark-mode .progress-detail-value {
             color: var(--text-light);
         }
         
-        .speed-good { color: var(--green-dark); }
-        .speed-medium { color: var(--amber); }
-        .speed-slow { color: var(--red); }
-        .speed-excellent { color: var(--blue); }
-        .speed-ultra { color: var(--purple); }
+        .progress-detail-label {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: 500;
+        }
         
-        .test-button {
+        .dark-mode .progress-detail-label {
+            color: #ccc;
+        }
+        
+        .test-timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline-track {
+            position: absolute;
+            top: 50%;
+            left: 40px;
+            right: 40px;
+            height: 4px;
+            background: #e0e0e0;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+        
+        .timeline-progress {
+            position: absolute;
+            top: 50%;
+            left: 40px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--green-primary), var(--green-dark));
+            transform: translateY(-50%);
+            z-index: 2;
+            transition: width 0.5s ease;
+        }
+        
+        .timeline-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 3;
+            flex: 1;
+        }
+        
+        .stage-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .stage-icon.completed {
             background: var(--green-primary);
             color: white;
+            transform: scale(1.1);
+        }
+        
+        .stage-icon.active {
+            background: var(--blue);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 0 6px rgba(33, 150, 243, 0.2);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .stage-label {
+            font-size: 0.85em;
+            color: #666;
+            text-align: center;
+            font-weight: 500;
+            max-width: 80px;
+        }
+        
+        .dark-mode .stage-label {
+            color: #ccc;
+        }
+        
+        .stage-label.active {
+            color: var(--blue);
+            font-weight: 600;
+        }
+        
+        .server-selection {
+            text-align: center;
+            margin: 30px 0;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .dark-mode .server-selection {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .server-selection h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+        }
+        
+        .dark-mode .server-selection h3 {
+            color: var(--text-light);
+        }
+        
+        .server-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .server-option {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            min-width: 180px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            max-width: 250px;
+        }
+        
+        .server-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: var(--green-primary);
+        }
+        
+        .server-option.selected {
+            border-color: var(--green-primary);
+            background: var(--green-light);
+            transform: translateY(-3px);
+        }
+        
+        .dark-mode .server-option {
+            background: #37474F;
+            border-color: #455A64;
+        }
+        
+        .dark-mode .server-option.selected {
+            background: #1B5E20;
+            border-color: var(--green-primary);
+        }
+        
+        .server-option-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        
+        .server-option-ping {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            min-height: 20px;
+        }
+        
+        .dark-mode .server-option-ping {
+            color: #ccc;
+        }
+        
+        .server-option-location {
+            font-size: 0.85em;
+            color: #888;
+        }
+        
+        .dark-mode .server-option-location {
+            color: #aaa;
+        }
+        
+        .server-flag {
+            width: 24px;
+            height: 18px;
+            border-radius: 2px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .distance-near { color: #4CAF50; }
+        .distance-medium { color: #FF9800; }
+        .distance-far { color: #F44336; }
+        
+        .test-button {
+            background: linear-gradient(135deg, var(--green-primary), var(--green-dark));
+            color: white;
             border: none;
-            padding: 18px 50px;
+            padding: 20px 60px;
             font-size: 1.3em;
             border-radius: 50px;
             cursor: pointer;
@@ -206,12 +514,12 @@
             transition: all 0.3s ease;
             font-weight: bold;
             letter-spacing: 0.5px;
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
         }
         
         .test-button:hover:not(:disabled) {
             transform: translateY(-3px);
-            background: var(--green-dark);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
         }
         
         .test-button:disabled {
@@ -228,179 +536,61 @@
             background: var(--green-primary);
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
+            padding: 12px 16px;
+            border-radius: 50%;
             cursor: pointer;
             z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
         }
         
-        .test-details {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-top: 30px;
-            flex-wrap: wrap;
+        .theme-toggle:hover {
+            transform: rotate(30deg);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
         }
         
-        .detail-box {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px 30px;
-            border-radius: 10px;
-            min-width: 150px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        #speedResult {
+            display: none;
+            text-align: center;
+            padding: 40px 30px;
+            margin: 30px 0;
+            border-radius: 16px;
+            background: var(--green-light);
+            animation: fadeIn 0.8s ease;
         }
         
-        .dark-mode .detail-box {
-            background: rgba(0, 0, 0, 0.3);
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        .detail-value {
-            font-size: 2em;
+        .dark-mode #speedResult {
+            background: #1B5E20;
+        }
+        
+        .speed-value {
+            font-size: 4em;
             font-weight: bold;
-            margin: 10px 0;
+            margin: 20px 0;
             color: var(--text-dark);
         }
         
-        .dark-mode .detail-value {
+        .dark-mode .speed-value {
             color: var(--text-light);
         }
         
-        .detail-label {
-            font-size: 0.95em;
-            color: #666;
-            font-weight: 500;
-        }
-        
-        .dark-mode .detail-label {
-            color: #ccc;
-        }
-        
-        .progress-container {
-            width: 100%;
-            height: 12px;
-            background: #e0e0e0;
-            border-radius: 6px;
-            margin: 40px 0 30px 0;
-            overflow: hidden;
-            display: none;
-        }
-        
-        .dark-mode .progress-container {
-            background: #455A64;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--green-primary), var(--green-dark));
-            width: 0%;
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .status-message {
-            text-align: center;
-            margin: 25px 0;
-            font-size: 1.1em;
-            color: #666;
-            min-height: 28px;
-            font-weight: 500;
-        }
-        
-        .dark-mode .status-message {
-            color: #ccc;
-        }
-        
-        .test-stages {
-            display: flex;
-            justify-content: space-between;
-            margin: 30px 0;
-            font-size: 0.95em;
-            color: #666;
-        }
-        
-        .dark-mode .test-stages {
-            color: #ddd;
-        }
-        
-        .test-stage {
-            text-align: center;
-            flex: 1;
-            padding: 10px 5px;
-            opacity: 0.5;
-            transition: all 0.3s ease;
-            border-bottom: 3px solid transparent;
-        }
-        
-        .test-stage.active {
-            color: var(--green-primary);
-            font-weight: bold;
-            opacity: 1;
-            border-bottom: 3px solid var(--green-primary);
-        }
-        
-        .dark-mode .test-stage.active {
-            color: var(--green-primary);
-        }
-        
-        .connection-info {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 0.9em;
-            color: #666;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 8px;
-        }
-        
-        .dark-mode .connection-info {
-            background: rgba(0, 0, 0, 0.2);
-            color: #ccc;
-        }
-        
-        .jitter-value {
-            font-size: 1.8em;
-            font-weight: bold;
-            margin: 5px 0;
-        }
-        
-        .accuracy-note {
-            text-align: center;
-            font-size: 0.85em;
-            color: #888;
-            margin-top: 20px;
-            font-style: italic;
-        }
-        
-        .dark-mode .accuracy-note {
-            color: #aaa;
-        }
-        
-        .connection-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            font-weight: bold;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
-        
-        .badge-wifi { background: #4CAF50; color: white; }
-        .badge-mobile { background: #2196F3; color: white; }
-        .badge-ethernet { background: #795548; color: white; }
-        .badge-unknown { background: #9E9E9E; color: white; }
-        
-        .badge-icon {
-            font-size: 0.9em;
-        }
+        .speed-good { color: var(--green-dark); }
+        .speed-medium { color: var(--amber); }
+        .speed-slow { color: var(--red); }
+        .speed-excellent { color: var(--blue); }
+        .speed-ultra { color: var(--purple); }
         
         .result-status {
-            font-size: 1.2em;
+            font-size: 1.4em;
             font-weight: 600;
-            margin-bottom: 30px;
-            padding: 8px 20px;
-            border-radius: 20px;
+            margin-bottom: 40px;
+            padding: 12px 30px;
+            border-radius: 30px;
             display: inline-block;
         }
         
@@ -438,6 +628,76 @@
             background-color: rgba(244, 67, 54, 0.2);
             color: #FFCDD2;
             border: 2px solid rgba(244, 67, 54, 0.4);
+        }
+        
+        .test-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .detail-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .dark-mode .detail-box {
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .detail-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin: 15px 0;
+            color: var(--text-dark);
+        }
+        
+        .dark-mode .detail-value {
+            color: var(--text-light);
+        }
+        
+        .detail-label {
+            font-size: 1em;
+            color: #666;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .dark-mode .detail-label {
+            color: #ccc;
+        }
+        
+        .connection-info {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.95em;
+            color: #666;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .dark-mode .connection-info {
+            background: rgba(0, 0, 0, 0.3);
+            color: #ccc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .accuracy-note {
+            text-align: center;
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 25px;
+            font-style: italic;
+        }
+        
+        .dark-mode .accuracy-note {
+            color: #aaa;
         }
         
         .preloader {
@@ -577,124 +837,6 @@
             }
         }
         
-        .connection-type-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 5px;
-            font-size: 0.85em;
-            color: #666;
-        }
-        
-        .dark-mode .connection-type-indicator {
-            color: #ccc;
-        }
-        
-        .server-selection {
-            text-align: center;
-            margin: 20px 0;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            display: none;
-        }
-        
-        .dark-mode .server-selection {
-            background: rgba(0, 0, 0, 0.2);
-        }
-        
-        .server-selection h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: var(--text-dark);
-        }
-        
-        .dark-mode .server-selection h3 {
-            color: var(--text-light);
-        }
-        
-        .server-options {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-        
-        .server-option {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
-            min-width: 180px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex: 1;
-            max-width: 250px;
-        }
-        
-        .server-option:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border-color: var(--green-primary);
-        }
-        
-        .server-option.selected {
-            border-color: var(--green-primary);
-            background: var(--green-light);
-            transform: translateY(-3px);
-        }
-        
-        .dark-mode .server-option {
-            background: #37474F;
-            border-color: #455A64;
-        }
-        
-        .dark-mode .server-option.selected {
-            background: #1B5E20;
-            border-color: var(--green-primary);
-        }
-        
-        .server-option-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            font-size: 1.1em;
-        }
-        
-        .server-option-ping {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 5px;
-            min-height: 20px;
-        }
-        
-        .dark-mode .server-option-ping {
-            color: #ccc;
-        }
-        
-        .server-option-location {
-            font-size: 0.85em;
-            color: #888;
-        }
-        
-        .dark-mode .server-option-location {
-            color: #aaa;
-        }
-        
-        .server-flag {
-            width: 24px;
-            height: 18px;
-            border-radius: 2px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            display: inline-block;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-        
-        .distance-near { color: #4CAF50; }
-        .distance-medium { color: #FF9800; }
-        .distance-far { color: #F44336; }
-        
         .permission-request {
             display: none;
             position: fixed;
@@ -711,10 +853,10 @@
         .permission-content {
             background: white;
             padding: 30px;
-            border-radius: 10px;
+            border-radius: 12px;
             max-width: 500px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
         }
         
         .dark-mode .permission-content {
@@ -740,7 +882,7 @@
         
         .permission-btn {
             padding: 12px 24px;
-            border-radius: 5px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
             font-weight: bold;
@@ -748,12 +890,13 @@
         }
         
         .permission-btn.allow {
-            background: var(--green-primary);
+            background: linear-gradient(135deg, var(--green-primary), var(--green-dark));
             color: white;
         }
         
         .permission-btn.allow:hover {
-            background: var(--green-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
         }
         
         .permission-btn.deny {
@@ -763,6 +906,7 @@
         
         .permission-btn.deny:hover {
             background: #cccccc;
+            transform: translateY(-2px);
         }
         
         .dark-mode .permission-btn.deny {
@@ -773,12 +917,49 @@
         .dark-mode .permission-btn.deny:hover {
             background: #546E7A;
         }
+        
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            background: #ffebee;
+            border-radius: 8px;
+            color: #c62828;
+            display: none;
+        }
+        
+        .dark-mode .error-message {
+            background: #3f1f1f;
+            color: #ffcdd2;
+        }
+        
+        .test-progress-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .dark-mode .test-progress-text {
+            color: #ccc;
+        }
+        
+        .test-time-remaining {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        .dark-mode .test-time-remaining {
+            color: #aaa;
+        }
     </style>
 </head>
 <body>
     <div class="preloader" id="preloader">
         <div class="preloader-content">
-            <div class="loading-text" id="loadingText">Taking the fish for a walk...</div>
+            <div class="loading-text" id="loadingText">Initializing speed test...</div>
             <div class="spinner-container">
                 <div class="spinner"></div>
                 <div class="spinner-inner">
@@ -800,24 +981,20 @@
         </div>
     </div>
     
-    <div class="permission-request" id="connectionPermissionRequest">
-        <div class="permission-content">
-            <h3>Network Information Access</h3>
-            <p>To accurately detect your connection type (WiFi, Mobile Data, etc.), we need access to your network information.</p>
-            <p>This helps provide more accurate speed analysis and connection type detection.</p>
-            <div class="permission-buttons">
-                <button class="permission-btn allow" onclick="allowConnectionInfo()">Allow Network Info</button>
-                <button class="permission-btn deny" onclick="continueWithoutConnectionInfo()">Continue Without</button>
-            </div>
-        </div>
-    </div>
-    
-    <button class="theme-toggle" onclick="toggleTheme()">Toggle Light/Dark</button>
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon"></i>
+    </button>
     
     <div class="container">
         <div class="header">
             <h1>Internet Speed Checker</h1>
-            <p>Test your internet connection speed</p>
+            <p>Test your connection speed with real-time graphical analysis</p>
+        </div>
+        
+        <div class="error-message" id="errorMessage">
+            <h3><i class="fas fa-exclamation-triangle"></i> Connection Error</h3>
+            <p id="errorText">Unable to connect to test servers. Please check your internet connection and try again.</p>
+            <button class="test-button" onclick="retryInitialization()" style="margin: 15px auto; padding: 12px 30px; font-size: 1em;">Retry Connection</button>
         </div>
         
         <div class="location-info" id="locationInfo">
@@ -841,24 +1018,71 @@
             </div>
         </div>
         
-        <div class="server-map" id="serverMap" style="display: none;">
-            <!-- Server pills will be added here dynamically -->
-        </div>
-        
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
-        
-        <div class="test-stages" id="testStages">
-            <div class="test-stage" id="stageLocation">Finding Nearest Server</div>
-            <div class="test-stage" id="stagePing">Latency Test</div>
-            <div class="test-stage" id="stageDownload">Download Test</div>
-            <div class="test-stage" id="stageUpload">Upload Test</div>
-            <div class="test-stage" id="stageComplete">Analysis</div>
-        </div>
-        
-        <div class="status-message" id="statusMessage">
-            Finding closest servers based on your location...
+        <div class="test-progress-container" id="testProgressContainer">
+            <div class="test-progress-header">
+                <div class="test-phase" id="testPhase">Initializing Test...</div>
+                <div class="test-phase-badge" id="testPhaseBadge">Starting</div>
+            </div>
+            
+            <div class="speed-graph-container">
+                <div class="speed-graph" id="speedGraph">
+                    <canvas class="graph-canvas" id="graphCanvas"></canvas>
+                    <div class="graph-overlay" id="graphOverlay">
+                        <div class="current-speed" id="currentSpeed">0.0</div>
+                        <div class="speed-unit" id="speedUnit">Mbps</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="progress-details" id="progressDetails">
+                <div class="progress-detail-card" id="progressCardDownload">
+                    <div class="progress-detail-label">DOWNLOAD SPEED</div>
+                    <div class="progress-detail-value" id="progressDownload">--</div>
+                    <div class="progress-detail-label" id="downloadStatus">Waiting</div>
+                    <div class="test-progress-text" id="downloadProgressText"></div>
+                    <div class="test-time-remaining" id="downloadTimeRemaining"></div>
+                </div>
+                <div class="progress-detail-card" id="progressCardUpload">
+                    <div class="progress-detail-label">UPLOAD SPEED</div>
+                    <div class="progress-detail-value" id="progressUpload">--</div>
+                    <div class="progress-detail-label" id="uploadStatus">Waiting</div>
+                    <div class="test-progress-text" id="uploadProgressText"></div>
+                    <div class="test-time-remaining" id="uploadTimeRemaining"></div>
+                </div>
+            </div>
+            
+            <div class="test-timeline">
+                <div class="timeline-track"></div>
+                <div class="timeline-progress" id="timelineProgress"></div>
+                
+                <div class="timeline-stage">
+                    <div class="stage-icon" id="stageIconLocation">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="stage-label" id="stageLabelLocation">Server</div>
+                </div>
+                
+                <div class="timeline-stage">
+                    <div class="stage-icon" id="stageIconDownload">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div class="stage-label" id="stageLabelDownload">Download</div>
+                </div>
+                
+                <div class="timeline-stage">
+                    <div class="stage-icon" id="stageIconUpload">
+                        <i class="fas fa-upload"></i>
+                    </div>
+                    <div class="stage-label" id="stageLabelUpload">Upload</div>
+                </div>
+                
+                <div class="timeline-stage">
+                    <div class="stage-icon" id="stageIconComplete">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="stage-label" id="stageLabelComplete">Results</div>
+                </div>
+            </div>
         </div>
         
         <button class="test-button" onclick="startSpeedTest()" id="testButton" disabled>Finding Servers...</button>
@@ -872,37 +1096,17 @@
                 <div class="detail-box">
                     <div class="detail-value" id="downloadSpeed">--</div>
                     <div class="detail-label">DOWNLOAD SPEED</div>
-                    <div style="font-size: 0.8em; color: #888; margin-top: 5px;" id="downloadQuality">--</div>
                 </div>
                 <div class="detail-box">
                     <div class="detail-value" id="uploadSpeed">--</div>
                     <div class="detail-label">UPLOAD SPEED</div>
-                    <div style="font-size: 0.8em; color: #888; margin-top: 5px;" id="uploadQuality">--</div>
-                </div>
-                <div class="detail-box">
-                    <div class="detail-value" id="pingValue">--</div>
-                    <div class="detail-label">PING</div>
-                    <div style="font-size: 0.8em; color: #888; margin-top: 5px;" id="pingQuality">--</div>
-                </div>
-                <div class="detail-box">
-                    <div class="detail-value" id="jitterValue">--</div>
-                    <div class="detail-label">JITTER</div>
-                    <div style="font-size: 0.8em; color: #888; margin-top: 5px;" id="jitterQuality">--</div>
                 </div>
             </div>
             
             <div class="connection-info">
                 <div id="ispInfo"><strong>ISP:</strong> --</div>
-                <div id="connectionType" style="margin-top: 8px;"><strong>Connection Type:</strong> --</div>
-                <div id="detectedLocation" style="margin-top: 8px;"><strong>Your Location:</strong> --</div>
-                <div id="testServerInfo" style="margin-top: 8px;"><strong>Test Server:</strong> --</div>
-                <div id="connectionAccuracy" style="margin-top: 8px; font-size: 0.85em; color: #666;">
-                    <strong>Detection Confidence:</strong> Speed-based analysis combined with browser API
-                </div>
-            </div>
-            
-            <div class="accuracy-note">
-                Connection type detected based on browser information and speed patterns
+                <div id="detectedLocation" style="margin-top: 12px;"><strong>Your Location:</strong> --</div>
+                <div id="testServerInfo" style="margin-top: 12px;"><strong>Test Server:</strong> --</div>
             </div>
         </div>
     </div>
@@ -919,27 +1123,16 @@
             document.body.classList.add('dark-mode');
         }
         
-        // Fun animal-themed loading messages
+        // Fun loading messages
         const loadingMessages = [
-            "Taking the fish for a walk...",
-            "Teaching pigs to fly...",
-            "Giving cats swimming lessons...",
-            "Training dogs to use chopsticks...",
-            "Teaching squirrels to tap dance...",
-            "Organizing a turtle marathon...",
-            "Giving rabbits a driving test...",
-            "Teaching birds to write poetry...",
-            "Training mice to play chess...",
-            "Giving elephants ballet lessons...",
-            "Teaching cows to use smartphones...",
-            "Training ants to build skyscrapers...",
-            "Giving penguins sunbathing lessons...",
-            "Teaching sloths to sprint...",
-            "Training monkeys to do taxes...",
-            "Giving zebras a fashion makeover...",
-            "Teaching giraffes limbo dancing...",
-            "Training koalas to stay awake...",
-            "Giving octopuses knitting lessons...",
+            "Initializing speed test...",
+            "Preparing test servers...",
+            "Checking network connectivity...",
+            "Configuring test parameters...",
+            "Establishing secure connection...",
+            "Calibrating measurement tools...",
+            "Optimizing for your location...",
+            "Almost ready to start...",
             "Ready to test your connection!"
         ];
         
@@ -947,15 +1140,26 @@
         const LOCATION_CACHE_KEY = 'speedtest_location_cache';
         const LOCATION_CACHE_TTL = 30 * 60 * 1000;
         
+        // Graph variables
+        let speedData = [];
+        let maxDataPoints = 80; // Increased for longer tests
+        let currentTestType = null;
+        let startTime = null;
+        let lastUpdateTime = 0;
+        let graphUpdateInterval = null;
+        let testBytesTransferred = 0;
+        let lastBytesUpdateTime = 0;
+        
+        // Test variables - UPDATED FOR LONGER TESTS
         let testInProgress = false;
         let userLocation = null;
         let bestServer = null;
-        let detectedConnectionType = 'Unknown';
         let loadingProgress = 0;
-        let serverCandidates = [];
         let serverDistances = new Map();
         let locationPermissionGranted = false;
-        let connectionInfoPermissionGranted = false;
+        let initializationAttempted = false;
+        let downloadTestDuration = 8000; // Increased from 5000 to 8000ms
+        let uploadTestDuration = 7000;   // Increased from 5000 to 7000ms
         
         // Country code to flag mapping
         const countryFlagMap = {
@@ -967,23 +1171,12 @@
             'SG': 'sg', 'HK': 'hk', 'KR': 'kr', 'TW': 'tw', 'MX': 'mx'
         };
         
-        // Get flag class for country code
-        function getFlagClass(countryCode) {
-            const code = (countryCode || 'unknown').toUpperCase();
-            if (countryFlagMap[code]) {
-                return `flag-icon-${countryFlagMap[code]}`;
-            }
-            return 'flag-icon-us'; // Default to US flag
-        }
-        
-        // Server database with global distribution
+        // Server database with global distribution - IMPROVED WITH BETTER LOCATIONS AND LARGER FILES
         const testServers = [
-            // North America
             { 
-                id: 'cdn_na', 
+                id: 'cdn_na_west', 
                 name: "San Francisco, USA", 
-                pingUrl: "https://1.1.1.1/cdn-cgi/trace",
-                downloadUrl: "https://speed.cloudflare.com/__down?bytes=20000000",
+                downloadUrl: "https://speed.cloudflare.com/__down?bytes=50000000", // Increased from 20MB to 50MB
                 uploadUrl: "https://httpbin.org/post",
                 country: "United States",
                 countryCode: "US",
@@ -991,26 +1184,11 @@
                 lat: 37.7749,
                 lon: -122.4194,
                 region: "na",
-                description: "Cloudflare North America"
+                description: "Cloudflare West Coast"
             },
             { 
-                id: 'github_na', 
-                name: "California, USA", 
-                pingUrl: "https://raw.githubusercontent.com/git/git/master/README.md",
-                downloadUrl: "https://raw.githubusercontent.com/torvalds/linux/master/README",
-                uploadUrl: "https://httpbin.org/post",
-                country: "United States",
-                countryCode: "US",
-                city: "California",
-                lat: 37.7749,
-                lon: -122.4194,
-                region: "na",
-                description: "GitHub USA Server"
-            },
-            { 
-                id: 'cdn_ny', 
+                id: 'cdn_na_east', 
                 name: "New York, USA", 
-                pingUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
                 downloadUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
                 uploadUrl: "https://httpbin.org/post",
                 country: "United States",
@@ -1021,12 +1199,10 @@
                 region: "na",
                 description: "Cloudflare East Coast"
             },
-            // Europe
             { 
-                id: 'cdn_eu', 
+                id: 'cdn_eu_west', 
                 name: "Amsterdam, Netherlands", 
-                pingUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
-                downloadUrl: "https://eu.speed.cloudflare.com/__down?bytes=20000000",
+                downloadUrl: "https://eu.speed.cloudflare.com/__down?bytes=50000000", // Increased from 20MB to 50MB
                 uploadUrl: "https://httpbin.org/post",
                 country: "Netherlands",
                 countryCode: "NL",
@@ -1037,9 +1213,8 @@
                 description: "Cloudflare Europe"
             },
             { 
-                id: 'jsdelivr_eu', 
+                id: 'cdn_eu_central', 
                 name: "Frankfurt, Germany", 
-                pingUrl: "https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js",
                 downloadUrl: "https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js",
                 uploadUrl: "https://httpbin.org/post",
                 country: "Germany",
@@ -1048,13 +1223,11 @@
                 lat: 50.1109,
                 lon: 8.6821,
                 region: "eu",
-                description: "jsDelivr Europe"
+                description: "jsDelivr Central Europe"
             },
-            // UK specific
             { 
                 id: 'cdn_uk', 
                 name: "London, UK", 
-                pingUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
                 downloadUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
                 uploadUrl: "https://httpbin.org/post",
                 country: "United Kingdom",
@@ -1066,24 +1239,8 @@
                 description: "Cloudflare UK"
             },
             { 
-                id: 'github_uk', 
-                name: "London, UK", 
-                pingUrl: "https://raw.githubusercontent.com/torvalds/linux/master/README",
-                downloadUrl: "https://raw.githubusercontent.com/torvalds/linux/master/README",
-                uploadUrl: "https://httpbin.org/post",
-                country: "United Kingdom",
-                countryCode: "GB",
-                city: "London",
-                lat: 51.5074,
-                lon: -0.1278,
-                region: "eu",
-                description: "GitHub Europe"
-            },
-            // Asia
-            { 
-                id: 'cdn_asia', 
+                id: 'cdn_asia_sg', 
                 name: "Singapore", 
-                pingUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
                 downloadUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
                 uploadUrl: "https://httpbin.org/post",
                 country: "Singapore",
@@ -1095,9 +1252,8 @@
                 description: "Cloudflare Asia"
             },
             { 
-                id: 'cdn_jp', 
+                id: 'cdn_asia_jp', 
                 name: "Tokyo, Japan", 
-                pingUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
                 downloadUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
                 uploadUrl: "https://httpbin.org/post",
                 country: "Japan",
@@ -1108,11 +1264,9 @@
                 region: "asia",
                 description: "Cloudflare Japan"
             },
-            // Australia
             { 
                 id: 'cdn_au', 
                 name: "Sydney, Australia", 
-                pingUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
                 downloadUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
                 uploadUrl: "https://httpbin.org/post",
                 country: "Australia",
@@ -1123,12 +1277,23 @@
                 region: "au",
                 description: "Cloudflare Australia"
             },
-            // Global fallbacks
+            { 
+                id: 'cdn_sa', 
+                name: "São Paulo, Brazil", 
+                downloadUrl: "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js",
+                uploadUrl: "https://httpbin.org/post",
+                country: "Brazil",
+                countryCode: "BR",
+                city: "São Paulo",
+                lat: -23.5505,
+                lon: -46.6333,
+                region: "sa",
+                description: "Cloudflare South America"
+            },
             { 
                 id: 'cdn_global', 
                 name: "Global Network", 
-                pingUrl: "https://1.1.1.1/cdn-cgi/trace",
-                downloadUrl: "https://speed.cloudflare.com/__down?bytes=10000000",
+                downloadUrl: "https://speed.cloudflare.com/__down?bytes=30000000", // Increased from 10MB to 30MB
                 uploadUrl: "https://httpbin.org/post",
                 country: "Global",
                 countryCode: "GL",
@@ -1140,7 +1305,312 @@
             }
         ];
         
-        // Update loading progress with whimsical messages
+        // Region mapping based on country codes
+        const regionByCountryCode = {
+            // North America
+            'US': 'na', 'CA': 'na', 'MX': 'na',
+            // Europe
+            'GB': 'eu', 'UK': 'eu', 'DE': 'eu', 'FR': 'eu', 'IT': 'eu', 'ES': 'eu', 'NL': 'eu',
+            'SE': 'eu', 'NO': 'eu', 'DK': 'eu', 'FI': 'eu', 'PL': 'eu', 'IE': 'eu', 'CH': 'eu',
+            'BE': 'eu', 'AT': 'eu', 'PT': 'eu', 'GR': 'eu',
+            // Asia
+            'CN': 'asia', 'JP': 'asia', 'IN': 'asia', 'RU': 'asia', 'KR': 'asia', 'SG': 'asia',
+            'TH': 'asia', 'VN': 'asia', 'MY': 'asia', 'ID': 'asia', 'PH': 'asia', 'HK': 'asia',
+            'TW': 'asia',
+            // Australia/Oceania
+            'AU': 'au', 'NZ': 'au',
+            // South America
+            'BR': 'sa', 'AR': 'sa', 'CL': 'sa', 'CO': 'sa', 'PE': 'sa',
+            // Africa
+            'ZA': 'africa', 'NG': 'africa', 'EG': 'africa', 'KE': 'africa'
+        };
+        
+        // Show error message
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+        
+        // Hide error message
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        // Retry initialization
+        function retryInitialization() {
+            hideError();
+            document.getElementById('testButton').disabled = true;
+            document.getElementById('testButton').textContent = 'Finding Servers...';
+            initializeApp();
+        }
+        
+        // Initialize speed graph
+        function initializeSpeedGraph() {
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            
+            speedData = [];
+            drawGraph(ctx);
+        }
+        
+        // Draw the speed graph
+        function drawGraph(ctx) {
+            const canvas = ctx.canvas;
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            if (speedData.length < 2) {
+                ctx.strokeStyle = '#e0e0e0';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(20, height / 2);
+                ctx.lineTo(width - 20, height / 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                return;
+            }
+            
+            const maxSpeed = Math.max(...speedData.map(d => d.speed), 1);
+            
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            for (let i = 0; i <= 5; i++) {
+                const y = height - 20 - (i * (height - 40) / 5);
+                ctx.beginPath();
+                ctx.moveTo(20, y);
+                ctx.lineTo(width - 20, y);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#666';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText((maxSpeed * i / 5).toFixed(1), 15, y + 4);
+            }
+            
+            const timeSpan = speedData[speedData.length - 1].time - speedData[0].time;
+            
+            for (let i = 0; i <= 5; i++) {
+                const x = 20 + (i * (width - 40) / 5);
+                ctx.beginPath();
+                ctx.moveTo(x, 20);
+                ctx.lineTo(x, height - 20);
+                ctx.stroke();
+                
+                if (timeSpan > 0) {
+                    const time = (timeSpan * i / 5).toFixed(1);
+                    ctx.fillStyle = '#666';
+                    ctx.font = '12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(time + 's', x, height - 5);
+                }
+            }
+            
+            ctx.strokeStyle = currentTestType === 'download' ? 'var(--chart-green)' : 'var(--chart-blue)';
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            
+            ctx.beginPath();
+            const firstPoint = speedData[0];
+            const x1 = 20 + ((firstPoint.time - speedData[0].time) / timeSpan) * (width - 40);
+            const y1 = height - 20 - (firstPoint.speed / maxSpeed) * (height - 40);
+            ctx.moveTo(x1, y1);
+            
+            for (let i = 1; i < speedData.length; i++) {
+                const point = speedData[i];
+                const x = 20 + ((point.time - speedData[0].time) / timeSpan) * (width - 40);
+                const y = height - 20 - (point.speed / maxSpeed) * (height - 40);
+                ctx.lineTo(x, y);
+            }
+            
+            ctx.stroke();
+            
+            if (speedData.length > 1) {
+                const gradient = ctx.createLinearGradient(0, 0, 0, height);
+                if (currentTestType === 'download') {
+                    gradient.addColorStop(0, 'rgba(76, 175, 80, 0.3)');
+                    gradient.addColorStop(1, 'rgba(76, 175, 80, 0.1)');
+                } else {
+                    gradient.addColorStop(0, 'rgba(33, 150, 243, 0.3)');
+                    gradient.addColorStop(1, 'rgba(33, 150, 243, 0.1)');
+                }
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.moveTo(20, height - 20);
+                
+                for (let i = 0; i < speedData.length; i++) {
+                    const point = speedData[i];
+                    const x = 20 + ((point.time - speedData[0].time) / timeSpan) * (width - 40);
+                    const y = height - 20 - (point.speed / maxSpeed) * (height - 40);
+                    ctx.lineTo(x, y);
+                }
+                
+                const lastX = 20 + ((speedData[speedData.length - 1].time - speedData[0].time) / timeSpan) * (width - 40);
+                ctx.lineTo(lastX, height - 20);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+        
+        // Add data point to graph with throttling
+        function addSpeedDataPoint(speed) {
+            const now = Date.now();
+            if (!startTime) {
+                startTime = now;
+                lastUpdateTime = now;
+            }
+            
+            const time = (now - startTime) / 1000;
+            
+            speedData.push({
+                speed: speed,
+                time: time
+            });
+            
+            if (speedData.length > maxDataPoints) {
+                speedData.shift();
+            }
+            
+            // Update the current speed display
+            document.getElementById('currentSpeed').textContent = speed.toFixed(1);
+            
+            // Update progress value
+            if (currentTestType === 'download') {
+                document.getElementById('progressDownload').textContent = speed.toFixed(1) + ' Mbps';
+            } else if (currentTestType === 'upload') {
+                document.getElementById('progressUpload').textContent = speed.toFixed(1) + ' Mbps';
+            }
+            
+            // Draw the graph
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+            drawGraph(ctx);
+            
+            lastUpdateTime = now;
+        }
+        
+        // Reset graph for new test
+        function resetGraph(testType) {
+            currentTestType = testType;
+            speedData = [];
+            startTime = Date.now();
+            lastUpdateTime = 0;
+            testBytesTransferred = 0;
+            lastBytesUpdateTime = Date.now();
+            
+            const unitElement = document.getElementById('speedUnit');
+            const phaseBadge = document.getElementById('testPhaseBadge');
+            
+            if (testType === 'download') {
+                unitElement.textContent = 'Mbps';
+                phaseBadge.textContent = 'Downloading';
+                phaseBadge.className = 'test-phase-badge testing';
+                document.getElementById('testPhase').textContent = 'Testing Download Speed';
+                document.getElementById('downloadStatus').textContent = 'Testing';
+            } else if (testType === 'upload') {
+                unitElement.textContent = 'Mbps';
+                phaseBadge.textContent = 'Uploading';
+                phaseBadge.className = 'test-phase-badge testing';
+                document.getElementById('testPhase').textContent = 'Testing Upload Speed';
+                document.getElementById('uploadStatus').textContent = 'Testing';
+            }
+            
+            document.getElementById('graphOverlay').style.display = 'flex';
+            document.getElementById('currentSpeed').textContent = '0.0';
+            
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+            drawGraph(ctx);
+        }
+        
+        // Update progress card
+        function updateProgressCard(type, value, status) {
+            const card = document.getElementById(`progressCard${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            const valueElement = document.getElementById(`progress${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            const statusElement = document.getElementById(`${type}Status`);
+            
+            if (value !== undefined) {
+                valueElement.textContent = value.toFixed(1) + ' Mbps';
+            }
+            
+            if (status) {
+                statusElement.textContent = status;
+                card.classList.remove('active');
+                if (status === 'Testing' || status === 'Completed') {
+                    card.classList.add('active');
+                }
+            }
+        }
+        
+        // Update timeline progress
+        function updateTimelineProgress(progress) {
+            const timelineProgress = document.getElementById('timelineProgress');
+            const width = Math.min(Math.max(progress, 0), 100);
+            timelineProgress.style.width = `${width}%`;
+        }
+        
+        // Update stage icons
+        function updateStage(stageId) {
+            document.querySelectorAll('.stage-icon').forEach(icon => {
+                icon.className = 'stage-icon';
+                const iconType = icon.querySelector('i').className;
+                icon.innerHTML = `<i class="${iconType}"></i>`;
+            });
+            
+            document.querySelectorAll('.stage-label').forEach(label => {
+                label.classList.remove('active');
+            });
+            
+            const stageIcon = document.getElementById(`stageIcon${stageId.charAt(0).toUpperCase() + stageId.slice(1)}`);
+            const stageLabel = document.getElementById(`stageLabel${stageId.charAt(0).toUpperCase() + stageId.slice(1)}`);
+            
+            if (stageIcon) {
+                stageIcon.classList.add('active');
+            }
+            if (stageLabel) {
+                stageLabel.classList.add('active');
+            }
+            
+            const stages = ['Location', 'Download', 'Upload', 'Complete'];
+            const currentIndex = stages.indexOf(stageId.charAt(0).toUpperCase() + stageId.slice(1));
+            
+            for (let i = 0; i < currentIndex; i++) {
+                const completedIcon = document.getElementById(`stageIcon${stages[i]}`);
+                if (completedIcon) {
+                    completedIcon.classList.add('completed');
+                }
+            }
+            
+            const progressPercent = (currentIndex / (stages.length - 1)) * 100;
+            updateTimelineProgress(progressPercent);
+        }
+        
+        // Show progress container
+        function showProgressContainer() {
+            document.getElementById('testProgressContainer').style.display = 'block';
+            document.getElementById('serverSelection').style.display = 'none';
+            initializeSpeedGraph();
+            updateProgressCard('download', 0, 'Waiting');
+            updateProgressCard('upload', 0, 'Waiting');
+            updateStage('location');
+        }
+        
+        // Hide progress container
+        function hideProgressContainer() {
+            document.getElementById('testProgressContainer').style.display = 'none';
+        }
+        
+        // Update loading progress
         function updateLoadingProgress(progress) {
             loadingProgress = Math.min(100, Math.max(0, progress));
             const percentageEl = document.getElementById('loadingPercentage');
@@ -1148,9 +1618,8 @@
             
             percentageEl.textContent = `${Math.round(loadingProgress)}%`;
             
-            // Update loading message based on progress
             const messageIndex = Math.min(
-                Math.floor(loadingProgress / 5),
+                Math.floor(loadingProgress / 10),
                 loadingMessages.length - 1
             );
             loadingTextEl.textContent = loadingMessages[messageIndex];
@@ -1174,9 +1643,13 @@
             }
         }
         
-        // Haversine formula for distance calculation in kilometers
+        // Calculate distance - FIXED VERSION
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+            // If any coordinate is missing, return Infinity
+            if (lat1 === null || lon1 === null || lat2 === null || lon2 === null) {
+                return Infinity;
+            }
+            
             const R = 6371; // Earth's radius in km
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -1188,22 +1661,23 @@
             return R * c;
         }
         
-        // Convert kilometers to miles
+        // Convert km to miles
         function kmToMiles(km) {
             return km * 0.621371;
         }
         
-        // Check if country uses miles (US, UK, and a few others)
+        // Check if country uses miles
         function usesMiles(countryCode) {
             const mileCountries = ['US', 'GB', 'UK', 'LR', 'MM'];
             return mileCountries.includes(countryCode.toUpperCase());
         }
         
-        // Format distance based on user's location
+        // Format distance
         function formatDistance(distanceKm, userCountryCode) {
-            if (distanceKm === Infinity) return "Unknown distance";
+            if (distanceKm === Infinity || distanceKm === undefined || distanceKm === null) {
+                return "Unknown distance";
+            }
             
-            // Cap at 500
             const maxDistance = 500;
             if (distanceKm > maxDistance) {
                 if (usesMiles(userCountryCode)) {
@@ -1213,7 +1687,6 @@
                 }
             }
             
-            // Convert units if needed
             let displayDistance, unit;
             if (usesMiles(userCountryCode)) {
                 displayDistance = kmToMiles(distanceKm);
@@ -1223,7 +1696,6 @@
                 unit = "km";
             }
             
-            // Round appropriately
             if (displayDistance < 1) {
                 return `< 1 ${unit}`;
             } else if (displayDistance < 10) {
@@ -1233,12 +1705,13 @@
             }
         }
         
-        // Get distance class for styling based on updated thresholds - FIXED VERSION
+        // Get distance class
         function getDistanceClass(distanceKm, userCountryCode) {
-            if (distanceKm === Infinity) return "";
+            if (distanceKm === Infinity || distanceKm === undefined || distanceKm === null) {
+                return "";
+            }
             
             if (usesMiles(userCountryCode)) {
-                // User uses miles - convert distance to miles first
                 const distanceMiles = kmToMiles(distanceKm);
                 const displayDistance = Math.min(distanceMiles, 500);
                 
@@ -1250,7 +1723,6 @@
                     return "distance-far";
                 }
             } else {
-                // User uses km - keep distance in km
                 const displayDistance = Math.min(distanceKm, 500);
                 
                 if (displayDistance <= 150) {
@@ -1261,6 +1733,15 @@
                     return "distance-far";
                 }
             }
+        }
+        
+        // Get flag class
+        function getFlagClass(countryCode) {
+            const code = (countryCode || 'unknown').toUpperCase();
+            if (countryFlagMap[code]) {
+                return `flag-icon-${countryFlagMap[code]}`;
+            }
+            return 'flag-icon-us';
         }
         
         // Get cached location
@@ -1300,84 +1781,39 @@
         function allowLocationPermission() {
             document.getElementById('locationPermissionRequest').style.display = 'none';
             locationPermissionGranted = true;
+            localStorage.setItem('locationPermission', 'granted');
             initializeApp();
         }
         
         function denyLocationPermission() {
             document.getElementById('locationPermissionRequest').style.display = 'none';
             locationPermissionGranted = false;
-            initializeApp();
-        }
-        
-        function allowConnectionInfo() {
-            document.getElementById('connectionPermissionRequest').style.display = 'none';
-            connectionInfoPermissionGranted = true;
-            initializeApp();
-        }
-        
-        function continueWithoutConnectionInfo() {
-            document.getElementById('connectionPermissionRequest').style.display = 'none';
-            connectionInfoPermissionGranted = false;
+            localStorage.setItem('locationPermission', 'denied');
             initializeApp();
         }
         
         // Check for required permissions
         function checkPermissions() {
-            const hasGeolocation = 'geolocation' in navigator;
-            const hasConnectionAPI = 'connection' in navigator;
+            const savedLocationPermission = localStorage.getItem('locationPermission');
             
-            // Show location permission request if needed
-            if (hasGeolocation && !locationPermissionGranted) {
-                document.getElementById('locationPermissionRequest').style.display = 'flex';
-                return false;
+            if (savedLocationPermission === 'granted') {
+                locationPermissionGranted = true;
             }
             
-            // Show connection info permission request if needed
-            if (hasConnectionAPI && !connectionInfoPermissionGranted) {
-                document.getElementById('connectionPermissionRequest').style.display = 'flex';
+            const hasGeolocation = 'geolocation' in navigator;
+            
+            if (hasGeolocation && !locationPermissionGranted && savedLocationPermission !== 'denied' && !initializationAttempted) {
+                document.getElementById('locationPermissionRequest').style.display = 'flex';
                 return false;
             }
             
             return true;
         }
         
-        // Try to get precise location from browser GPS
-        async function getPreciseLocation() {
-            if (!locationPermissionGranted) return null;
-            
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    resolve(null);
-                    return;
-                }
-                
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        resolve({
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude,
-                            accuracy: position.coords.accuracy,
-                            source: 'gps'
-                        });
-                    },
-                    (error) => {
-                        // User denied or error getting GPS location
-                        resolve(null);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 5000,
-                        maximumAge: 0
-                    }
-                );
-            });
-        }
-        
-        // More accurate location detection
+        // Detect user location - IMPROVED VERSION
         async function detectUserLocation() {
             updateLoadingProgress(40);
             
-            // Check cache first
             const cached = getCachedLocation();
             if (cached) {
                 updateLoadingProgress(50);
@@ -1398,139 +1834,148 @@
                 continent: 'Unknown'
             };
             
-            // Try multiple location sources in order of accuracy
-            
-            // 1. First try browser GPS for most accurate location
             try {
-                updateLoadingProgress(45);
-                const preciseLocation = await getPreciseLocation();
-                if (preciseLocation) {
-                    locationData.latitude = preciseLocation.latitude;
-                    locationData.longitude = preciseLocation.longitude;
-                    locationData.accuracy = 'high';
-                    locationData.method = 'gps';
-                    
-                    // Try to reverse geocode GPS coordinates for city/country
+                updateLoadingProgress(55);
+                
+                // Try multiple IP geolocation services for better accuracy
+                const services = [
+                    'https://ipapi.co/json/',
+                    'https://ipinfo.io/json',
+                    'https://freegeoip.app/json/'
+                ];
+                
+                for (const service of services) {
                     try {
-                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${preciseLocation.latitude}&lon=${preciseLocation.longitude}&zoom=10`);
-                        if (response.ok) {
-                            const data = await response.json();
-                            if (data.address) {
-                                locationData.city = data.address.city || data.address.town || data.address.village || data.address.municipality || 'Unknown';
-                                locationData.country = data.address.country || 'Unknown';
-                                locationData.countryCode = data.address.country_code?.toUpperCase() || 'Unknown';
-                                locationData.region = data.address.state || data.address.region || 'Unknown';
-                            }
-                        }
-                    } catch (error) {
-                        // Continue with IP-based location
-                    }
-                }
-            } catch (error) {
-                // GPS failed, continue with IP-based detection
-            }
-            
-            // 2. If no GPS or couldn't reverse geocode, try IP-based location
-            if (!locationData.city || locationData.city === 'Unknown') {
-                try {
-                    updateLoadingProgress(55);
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 3000);
-                    
-                    // Try ipapi.co first
-                    const response = await fetch('https://ipapi.co/json/', {
-                        signal: controller.signal
-                    });
-                    
-                    clearTimeout(timeoutId);
-                    
-                    if (response.ok) {
-                        updateLoadingProgress(65);
-                        const data = await response.json();
-                        
-                        // Only update if we don't have better data
-                        if (!locationData.city || locationData.city === 'Unknown') {
-                            locationData.city = data.city || 'Unknown';
-                        }
-                        if (!locationData.country || locationData.country === 'Unknown') {
-                            locationData.country = data.country_name || 'Unknown';
-                        }
-                        if (!locationData.countryCode || locationData.countryCode === 'Unknown') {
-                            locationData.countryCode = data.country_code || 'Unknown';
-                        }
-                        if (!locationData.region || locationData.region === 'Unknown') {
-                            locationData.region = data.region || 'Unknown';
-                        }
-                        if (!locationData.latitude) {
-                            locationData.latitude = data.latitude;
-                        }
-                        if (!locationData.longitude) {
-                            locationData.longitude = data.longitude;
-                        }
-                        locationData.isp = data.org || data.asn || 'Unknown ISP';
-                        locationData.method = locationData.method === 'gps' ? 'gps+ip' : 'ip_geolocation';
-                        
-                        // Determine continent from country code
-                        if (data.country_code) {
-                            const continent = getContinentFromCountryCode(data.country_code);
-                            locationData.continent = continent;
-                        }
-                    }
-                } catch (error) {
-                    // Try alternative IP service
-                    try {
-                        const backupResponse = await fetch('https://ipinfo.io/json?token=free', {
+                        const response = await fetch(service, {
                             signal: AbortSignal.timeout(3000)
                         });
                         
-                        if (backupResponse.ok) {
-                            const data = await backupResponse.json();
-                            const [lat, lon] = data.loc ? data.loc.split(',').map(Number) : [null, null];
+                        if (response.ok) {
+                            const data = await response.json();
                             
-                            if (!locationData.city || locationData.city === 'Unknown') {
-                                locationData.city = data.city || 'Unknown';
-                            }
-                            if (!locationData.country || locationData.country === 'Unknown') {
-                                locationData.country = data.country || 'Unknown';
-                            }
-                            if (!locationData.countryCode || locationData.countryCode === 'Unknown') {
-                                locationData.countryCode = data.country || 'Unknown';
-                            }
-                            if (!locationData.region || locationData.region === 'Unknown') {
-                                locationData.region = data.region || 'Unknown';
-                            }
-                            if (!locationData.latitude) {
-                                locationData.latitude = lat;
-                            }
-                            if (!locationData.longitude) {
-                                locationData.longitude = lon;
-                            }
-                            locationData.isp = data.org || data.hostname || 'Unknown ISP';
-                            locationData.method = locationData.method === 'gps' ? 'gps+ip' : 'ipinfo_io';
+                            // Get latitude/longitude from various possible formats
+                            let lat = null, lon = null;
                             
-                            // Determine continent from country code
-                            if (data.country) {
-                                const continent = getContinentFromCountryCode(data.country);
-                                locationData.continent = continent;
+                            if (data.latitude !== undefined && data.longitude !== undefined) {
+                                lat = data.latitude;
+                                lon = data.longitude;
+                            } else if (data.loc) {
+                                const [latStr, lonStr] = data.loc.split(',');
+                                lat = parseFloat(latStr);
+                                lon = parseFloat(lonStr);
+                            } else if (data.ll) {
+                                const [latStr, lonStr] = data.ll.split(',');
+                                lat = parseFloat(latStr);
+                                lon = parseFloat(lonStr);
+                            }
+                            
+                            locationData.city = data.city || data.city_name || locationData.city;
+                            locationData.country = data.country_name || data.country || locationData.country;
+                            locationData.countryCode = data.country_code || data.country || locationData.countryCode;
+                            locationData.region = data.region || data.region_name || data.state || locationData.region;
+                            locationData.latitude = lat || locationData.latitude;
+                            locationData.longitude = lon || locationData.longitude;
+                            locationData.isp = data.org || data.asn || data.isp || locationData.isp;
+                            locationData.method = service.split('/')[2];
+                            
+                            // If we got valid coordinates, break
+                            if (lat !== null && lon !== null) {
+                                break;
                             }
                         }
-                    } catch (backupError) {
-                        // Fallback to browser detection
-                        updateLoadingProgress(60);
-                        const browserLanguage = navigator.language || 'en-US';
-                        const countryCode = browserLanguage.split('-')[1] || 'US';
-                        locationData.countryCode = countryCode;
-                        locationData.method = 'browser_language';
-                        locationData.continent = getContinentFromCountryCode(countryCode);
+                    } catch (error) {
+                        // Try next service
+                        continue;
                     }
                 }
-            }
-            
-            // 3. Final fallback if still no location
-            if (locationData.city === 'Unknown' && locationData.country === 'Unknown') {
+                
+                updateLoadingProgress(65);
+                
+                // If we still don't have coordinates, estimate based on country
+                if (locationData.latitude === null && locationData.countryCode !== 'Unknown') {
+                    // Approximate coordinates for major countries
+                    const countryCoordinates = {
+                        'US': { lat: 39.8283, lon: -98.5795 }, // USA center
+                        'GB': { lat: 54.7024, lon: -3.2766 },  // UK center
+                        'DE': { lat: 51.1657, lon: 10.4515 },  // Germany center
+                        'FR': { lat: 46.6031, lon: 1.8883 },   // France center
+                        'JP': { lat: 36.2048, lon: 138.2529 }, // Japan center
+                        'AU': { lat: -25.2744, lon: 133.7751 }, // Australia center
+                        'CA': { lat: 56.1304, lon: -106.3468 }, // Canada center
+                        'BR': { lat: -14.2350, lon: -51.9253 }, // Brazil center
+                        'IN': { lat: 20.5937, lon: 78.9629 },   // India center
+                        'CN': { lat: 35.8617, lon: 104.1954 },  // China center
+                        'RU': { lat: 61.5240, lon: 105.3188 },  // Russia center
+                        'MX': { lat: 23.6345, lon: -102.5528 }, // Mexico center
+                        'IT': { lat: 41.8719, lon: 12.5674 },   // Italy center
+                        'ES': { lat: 40.4637, lon: -3.7492 },   // Spain center
+                        'NL': { lat: 52.1326, lon: 5.2913 },    // Netherlands center
+                        'SE': { lat: 60.1282, lon: 18.6435 },   // Sweden center
+                        'NO': { lat: 60.4720, lon: 8.4689 },    // Norway center
+                        'DK': { lat: 56.2639, lon: 9.5018 },    // Denmark center
+                        'FI': { lat: 61.9241, lon: 25.7482 },   // Finland center
+                        'PL': { lat: 51.9194, lon: 19.1451 },   // Poland center
+                        'IE': { lat: 53.1424, lon: -7.6921 },   // Ireland center
+                        'CH': { lat: 46.8182, lon: 8.2275 },    // Switzerland center
+                        'BE': { lat: 50.5039, lon: 4.4699 },    // Belgium center
+                        'AT': { lat: 47.5162, lon: 14.5501 },   // Austria center
+                        'PT': { lat: 39.3999, lon: -8.2245 },   // Portugal center
+                        'GR': { lat: 39.0742, lon: 21.8243 },   // Greece center
+                        'CZ': { lat: 49.8175, lon: 15.4720 },   // Czech Republic center
+                        'HU': { lat: 47.1625, lon: 19.5033 },   // Hungary center
+                        'RO': { lat: 45.9432, lon: 24.9668 },   // Romania center
+                        'BG': { lat: 42.7339, lon: 25.4858 },   // Bulgaria center
+                        'SG': { lat: 1.3521, lon: 103.8198 },   // Singapore
+                        'HK': { lat: 22.3964, lon: 114.1095 },  // Hong Kong
+                        'TW': { lat: 23.6978, lon: 120.9605 },  // Taiwan
+                        'KR': { lat: 35.9078, lon: 127.7669 },  // South Korea
+                        'MY': { lat: 4.2105, lon: 101.9758 },   // Malaysia
+                        'ID': { lat: -0.7893, lon: 113.9213 },  // Indonesia
+                        'TH': { lat: 15.8700, lon: 100.9925 },  // Thailand
+                        'VN': { lat: 14.0583, lon: 108.2772 },  // Vietnam
+                        'PH': { lat: 12.8797, lon: 121.7740 },  // Philippines
+                        'NZ': { lat: -40.9006, lon: 174.8860 }, // New Zealand
+                        'AR': { lat: -38.4161, lon: -63.6167 }, // Argentina
+                        'CL': { lat: -35.6751, lon: -71.5430 }, // Chile
+                        'CO': { lat: 4.5709, lon: -74.2973 },   // Colombia
+                        'PE': { lat: -9.1900, lon: -75.0152 },  // Peru
+                        'ZA': { lat: -30.5595, lon: 22.9375 },  // South Africa
+                        'NG': { lat: 9.0820, lon: 8.6753 },     // Nigeria
+                        'EG': { lat: 26.8206, lon: 30.8025 },   // Egypt
+                        'KE': { lat: -0.0236, lon: 37.9062 }    // Kenya
+                    };
+                    
+                    if (countryCoordinates[locationData.countryCode.toUpperCase()]) {
+                        const coords = countryCoordinates[locationData.countryCode.toUpperCase()];
+                        locationData.latitude = coords.lat;
+                        locationData.longitude = coords.lon;
+                        locationData.method = 'estimated_from_country';
+                    }
+                }
+                
+            } catch (error) {
+                // Final fallback - use browser language
+                updateLoadingProgress(60);
+                const browserLanguage = navigator.language || 'en-US';
+                const countryCode = browserLanguage.split('-')[1] || 'US';
+                locationData.countryCode = countryCode;
                 locationData.country = 'Detected from browser';
-                locationData.method = 'browser_detection';
-                locationData.continent = 'Unknown';
+                locationData.method = 'browser_language';
+                
+                // Add estimated coordinates for browser-detected country
+                const countryCoordinates = {
+                    'US': { lat: 39.8283, lon: -98.5795 },
+                    'GB': { lat: 54.7024, lon: -3.2766 },
+                    'DE': { lat: 51.1657, lon: 10.4515 },
+                    'FR': { lat: 46.6031, lon: 1.8883 },
+                    'JP': { lat: 36.2048, lon: 138.2529 }
+                };
+                
+                if (countryCoordinates[countryCode.toUpperCase()]) {
+                    const coords = countryCoordinates[countryCode.toUpperCase()];
+                    locationData.latitude = coords.lat;
+                    locationData.longitude = coords.lon;
+                }
             }
             
             updateLoadingProgress(70);
@@ -1539,68 +1984,82 @@
             return locationData;
         }
         
-        // Helper function to determine continent from country code
-        function getContinentFromCountryCode(countryCode) {
-            const code = countryCode.toUpperCase();
-            
-            // Europe
-            const europeCodes = ['GB', 'UK', 'DE', 'FR', 'IT', 'ES', 'NL', 'SE', 'NO', 'DK', 'FI', 'PL', 'IE', 'CH', 'BE', 'AT', 'PT', 'GR', 'CZ', 'HU', 'RO', 'BG'];
-            if (europeCodes.includes(code)) return 'eu';
-            
-            // North America
-            const naCodes = ['US', 'CA', 'MX'];
-            if (naCodes.includes(code)) return 'na';
-            
-            // South America
-            const saCodes = ['BR', 'AR', 'CL', 'CO', 'PE'];
-            if (saCodes.includes(code)) return 'sa';
-            
-            // Asia
-            const asiaCodes = ['CN', 'JP', 'IN', 'RU', 'KR', 'SG', 'TH', 'VN', 'MY', 'ID', 'PH', 'HK', 'TW'];
-            if (asiaCodes.includes(code)) return 'asia';
-            
-            // Australia/Oceania
-            const auCodes = ['AU', 'NZ'];
-            if (auCodes.includes(code)) return 'au';
-            
-            // Africa
-            const africaCodes = ['ZA', 'NG', 'EG', 'KE'];
-            if (africaCodes.includes(code)) return 'africa';
-            
-            return 'global';
-        }
-        
-        // Find closest servers based on geographical distance
+        // Find closest servers - FIXED VERSION
         function findClosestServers(userLocation, count = 6) {
-            if (!userLocation || (!userLocation.latitude && !userLocation.longitude)) {
-                // If no location, return random servers from different regions
-                return getDiverseServers(count);
+            // Clear previous distances
+            serverDistances.clear();
+            
+            // If we have coordinates, calculate distances
+            if (userLocation && userLocation.latitude !== null && userLocation.longitude !== null) {
+                const serversWithDistance = testServers
+                    .map(server => {
+                        // Calculate distance only if server has coordinates
+                        let distance = Infinity;
+                        if (server.lat !== null && server.lon !== null) {
+                            distance = calculateDistance(
+                                userLocation.latitude,
+                                userLocation.longitude,
+                                server.lat,
+                                server.lon
+                            );
+                        }
+                        return { server, distance };
+                    })
+                    .sort((a, b) => a.distance - b.distance);
+                
+                // Store distances for display
+                serversWithDistance.forEach(item => {
+                    serverDistances.set(item.server.id, item.distance);
+                });
+                
+                // Return closest servers
+                const closest = serversWithDistance
+                    .slice(0, Math.min(count, serversWithDistance.length))
+                    .map(item => item.server);
+                
+                console.log('Found closest servers based on location:', closest.map(s => s.name));
+                return closest;
             }
             
-            const serversWithDistance = testServers
-                .map(server => {
-                    const distance = calculateDistance(
-                        userLocation.latitude,
-                        userLocation.longitude,
-                        server.lat,
-                        server.lon
-                    );
-                    return { server, distance };
-                })
-                .sort((a, b) => a.distance - b.distance);
+            // If no coordinates, try to use country code for regional matching
+            if (userLocation && userLocation.countryCode !== 'Unknown') {
+                const userRegion = regionByCountryCode[userLocation.countryCode.toUpperCase()];
+                
+                if (userRegion) {
+                    // First try servers in the same region
+                    const regionalServers = testServers.filter(s => s.region === userRegion);
+                    if (regionalServers.length > 0) {
+                        // Add regional servers first
+                        const result = regionalServers.slice(0, Math.min(3, regionalServers.length));
+                        
+                        // Add some diverse servers from other regions
+                        const otherRegions = ['na', 'eu', 'asia', 'global'];
+                        for (const region of otherRegions) {
+                            if (region !== userRegion) {
+                                const regionServer = testServers.find(s => s.region === region);
+                                if (regionServer && !result.includes(regionServer) && result.length < count) {
+                                    result.push(regionServer);
+                                }
+                            }
+                        }
+                        
+                        // Set distances for regional servers as "near"
+                        result.forEach(server => {
+                            const distance = server.region === userRegion ? 50 : 300;
+                            serverDistances.set(server.id, distance);
+                        });
+                        
+                        console.log('Found regional servers:', result.map(s => s.name));
+                        return result;
+                    }
+                }
+            }
             
-            // Store distances for display
-            serversWithDistance.forEach(item => {
-                serverDistances.set(item.server.id, item.distance);
-            });
-            
-            // Get closest servers
-            const closest = serversWithDistance.slice(0, Math.min(count, serversWithDistance.length));
-            
-            return closest.map(item => item.server);
+            // Fallback: diverse servers from different regions
+            return getDiverseServers(count);
         }
         
-        // Get servers from different regions for global coverage
+        // Get diverse servers
         function getDiverseServers(count) {
             const regions = ['na', 'eu', 'asia', 'au', 'global'];
             const result = [];
@@ -1613,7 +2072,6 @@
                 }
             }
             
-            // Fill remaining slots with any servers
             if (result.length < count) {
                 const remaining = testServers
                     .filter(s => !result.includes(s))
@@ -1621,39 +2079,54 @@
                 result.push(...remaining);
             }
             
-            // Set unknown distances for these servers
             result.forEach(server => {
                 serverDistances.set(server.id, Infinity);
             });
             
+            console.log('Using diverse servers:', result.map(s => s.name));
             return result;
         }
         
-        // Find and display best server options with distance calculation
+        // Find and test server options - IMPROVED VERSION
         async function findAndTestServerOptions(userLocation) {
             updateLoadingProgress(75);
-            const statusMessage = document.getElementById('statusMessage');
             const testButton = document.getElementById('testButton');
             
-            statusMessage.textContent = 'Finding closest servers...';
+            // Clear any previous selection
+            bestServer = null;
             
             // Find closest servers based on location
             const closestServers = findClosestServers(userLocation, 6);
             
-            // Create initial server options with distances
-            createServerOptions(closestServers, userLocation.countryCode);
+            // Create server options with distances
+            createServerOptions(closestServers, userLocation.countryCode || 'US');
             
-            // Set best server (closest distance)
             if (closestServers.length > 0) {
+                // Select the first (closest) server by default
                 bestServer = closestServers[0];
                 updateServerDisplay(bestServer);
                 
-                // Enable test button
+                // Highlight the selected server in the UI
+                const serverOptions = document.querySelectorAll('.server-option');
+                serverOptions.forEach(option => {
+                    option.classList.remove('selected');
+                    if (option.dataset.serverId === bestServer.id) {
+                        option.classList.add('selected');
+                    }
+                });
+                
                 testButton.disabled = false;
                 testButton.textContent = 'Start Speed Test';
-                statusMessage.textContent = 'Select a server or click Start Test';
+                
+                console.log('Selected best server:', bestServer.name, 'for location:', userLocation.city, userLocation.country);
             } else {
-                statusMessage.textContent = 'No servers available. Please try again.';
+                // Fallback to global server
+                bestServer = testServers.find(s => s.id === 'cdn_global') || testServers[0];
+                updateServerDisplay(bestServer);
+                
+                testButton.disabled = false;
+                testButton.textContent = 'Start Speed Test';
+                showError('Using global test server. Local servers unavailable.');
             }
             
             return closestServers.map(server => ({
@@ -1662,21 +2135,18 @@
             }));
         }
         
-        // Create initial server options with distances
+        // Create server options
         function createServerOptions(servers, userCountryCode) {
             const serverSelection = document.getElementById('serverSelection');
             const serverOptions = document.getElementById('serverOptions');
             
-            // Clear existing options
             serverOptions.innerHTML = '';
             
-            // Create options for each server
             servers.forEach((server, index) => {
                 const option = document.createElement('div');
                 option.className = 'server-option';
                 option.dataset.serverId = server.id;
                 
-                // Create flag element
                 const flagClass = getFlagClass(server.countryCode);
                 const distanceKm = serverDistances.get(server.id);
                 const distanceClass = getDistanceClass(distanceKm, userCountryCode);
@@ -1692,36 +2162,31 @@
                 `;
                 
                 option.addEventListener('click', () => {
-                    // Remove selected class from all options
                     document.querySelectorAll('.server-option').forEach(opt => {
                         opt.classList.remove('selected');
                     });
                     
-                    // Add selected class to clicked option
                     option.classList.add('selected');
-                    
-                    // Update selected server
                     bestServer = server;
                     updateServerDisplay(server);
                     
-                    // Update status message
-                    const statusMessage = document.getElementById('statusMessage');
-                    statusMessage.textContent = `Selected ${server.city} server`;
+                    console.log('User selected server:', server.name);
                 });
                 
                 serverOptions.appendChild(option);
                 
                 // Select the first server by default
                 if (index === 0) {
-                    option.classList.add('selected');
+                    setTimeout(() => {
+                        option.classList.add('selected');
+                    }, 100);
                 }
             });
             
-            // Show server selection section
             serverSelection.style.display = 'block';
         }
         
-        // Update server display with selected server
+        // Update server display
         function updateServerDisplay(server) {
             const testServerEl = document.getElementById('testServer');
             const serverFlagEl = document.getElementById('serverFlag');
@@ -1734,7 +2199,6 @@
             }
             testServerEl.textContent = serverText;
             
-            // Update server flag
             if (server.countryCode && server.countryCode !== 'GL') {
                 serverFlagEl.className = `flag-icon ${getFlagClass(server.countryCode)}`;
                 serverFlagEl.style.display = 'inline-block';
@@ -1742,14 +2206,23 @@
                 serverFlagEl.className = 'flag-icon flag-icon-globe';
                 serverFlagEl.style.display = 'inline-block';
             }
+            
+            // Update results display as well
+            let serverInfo = '';
+            if (server.country === 'Global') {
+                serverInfo = 'Global CDN Network';
+            } else {
+                serverInfo = `${server.city}, ${server.country}`;
+            }
+            document.getElementById('testServerInfo').innerHTML = 
+                `<strong>Test Server:</strong> ${serverInfo}`;
         }
         
-        // Update location display with flags
+        // Update location display
         function updateLocationDisplay(location) {
             const userLocationEl = document.getElementById('userLocation');
             const userFlagEl = document.getElementById('userFlag');
             
-            // Update user location with more specific info
             let locationText = 'Your Location: ';
             if (location.city !== 'Unknown' && location.region !== 'Unknown' && location.country !== 'Unknown') {
                 locationText += `${location.city}, ${location.region}, ${location.country}`;
@@ -1758,333 +2231,38 @@
             } else if (location.country !== 'Unknown') {
                 locationText += location.country;
             } else {
-                locationText += 'Location detected from connection data';
+                locationText += 'Approximate location detected';
             }
             userLocationEl.textContent = locationText;
             
-            // Update user flag
             if (location.countryCode && location.countryCode !== 'Unknown') {
                 userFlagEl.className = `flag-icon ${getFlagClass(location.countryCode)}`;
                 userFlagEl.style.display = 'inline-block';
             } else {
                 userFlagEl.style.display = 'none';
             }
-        }
-        
-        // SIMPLIFIED: Basic connection type detection
-        async function detectConnectionType(downloadSpeed, uploadSpeed, ping, jitter) {
-            let connectionInfo = {
-                type: 'Unknown',
-                technology: 'Unknown',
-                confidence: 0,
-                details: []
-            };
             
-            // First check browser API
-            if (connectionInfoPermissionGranted) {
-                const browserDetection = detectConnectionFromBrowser();
-                if (browserDetection.type !== 'Unknown') {
-                    connectionInfo = browserDetection;
-                    connectionInfo.details.push('Detected via browser API');
-                    connectionInfo.confidence = 70;
-                }
-            }
-            
-            // If browser API didn't detect anything, try speed-based detection
-            if (connectionInfo.type === 'Unknown') {
-                const speedDetection = detectConnectionFromSpeed(downloadSpeed, uploadSpeed, ping, jitter);
-                if (speedDetection.confidence > 0) {
-                    connectionInfo = speedDetection;
-                    connectionInfo.details.push('Detected via speed analysis');
-                }
-            }
-            
-            // Clean up connection type display
-            if (connectionInfo.type === 'Mobile' || connectionInfo.technology === 'Mobile Data') {
-                connectionInfo.type = 'Mobile';
-                connectionInfo.technology = 'Mobile Data';
-            } else if (connectionInfo.type === 'WiFi') {
-                connectionInfo.technology = 'WiFi';
-            } else if (connectionInfo.type === 'Wired') {
-                connectionInfo.technology = 'Ethernet';
-            } else if (connectionInfo.technology === 'Satellite') {
-                connectionInfo.type = 'Satellite';
-                connectionInfo.technology = 'Satellite';
-            }
-            
-            return connectionInfo;
-        }
-        
-        function detectConnectionFromBrowser() {
-            const info = {
-                type: 'Unknown',
-                technology: 'Unknown',
-                confidence: 0,
-                details: []
-            };
-            
-            if (!('connection' in navigator)) {
-                info.details.push('No browser connection API available');
-                return info;
-            }
-            
-            const conn = navigator.connection;
-            
-            if (conn.type) {
-                info.type = conn.type;
-                info.confidence = 60;
-                info.details.push(`Browser reports type: ${conn.type}`);
-            }
-            
-            if (conn.effectiveType) {
-                // SIMPLIFIED: Just show "Mobile Data" for cellular connections
-                info.technology = 'Mobile Data';
-                info.confidence = Math.max(info.confidence, 50);
-                info.details.push(`Browser reports effective type: ${conn.effectiveType}`);
-            }
-            
-            if (conn.downlink) {
-                info.details.push(`Estimated downlink: ${conn.downlink} Mbps`);
-            }
-            
-            // SIMPLIFIED: Map connection types
-            if (conn.type === 'cellular') {
-                info.type = 'Mobile';
-                info.technology = 'Mobile Data';
-            }
-            
-            if (conn.type === 'wifi' || conn.type === 'wimax') {
-                info.type = 'WiFi';
-                info.technology = 'WiFi';
-            }
-            
-            if (conn.type === 'ethernet') {
-                info.type = 'Wired';
-                info.technology = 'Ethernet';
-            }
-            
-            return info;
-        }
-        
-        function detectConnectionFromSpeed(downloadSpeed, uploadSpeed, ping, jitter) {
-            const info = {
-                type: 'Unknown',
-                technology: 'Unknown',
-                confidence: 0,
-                details: []
-            };
-            
-            // SIMPLIFIED: Basic speed-based detection
-            if (downloadSpeed > 0 && ping > 0) {
-                // Very high latency (>500ms) suggests Satellite
-                if (ping > 500) {
-                    info.type = 'Satellite';
-                    info.technology = 'Satellite';
-                    info.confidence = 80;
-                    info.details.push('High latency suggests satellite connection');
-                }
-                // Mobile connections often have lower upload than download
-                else if (uploadSpeed < downloadSpeed * 0.3 && downloadSpeed < 150) {
-                    info.type = 'Mobile';
-                    info.technology = 'Mobile Data';
-                    info.confidence = 60;
-                    info.details.push('Asymmetrical speeds suggest mobile data');
-                }
-                // Symmetrical speeds suggest wired connection
-                else if (Math.abs(uploadSpeed - downloadSpeed) < Math.max(uploadSpeed, downloadSpeed) * 0.3) {
-                    info.type = 'Wired';
-                    info.technology = 'Ethernet';
-                    info.confidence = 70;
-                    info.details.push('Symmetrical speeds suggest wired connection');
-                }
-                // Otherwise assume WiFi
-                else {
-                    info.type = 'WiFi';
-                    info.technology = 'WiFi';
-                    info.confidence = 50;
-                    info.details.push('Speed pattern suggests WiFi connection');
-                }
-            }
-            
-            return info;
-        }
-        
-        // UPDATED: Connection badge with icons instead of text
-        function getConnectionBadge(type, tech) {
-            let badgeClass = 'badge-unknown';
-            let icon = 'fa-question-circle';
-            let badgeText = '';
-            
-            // Set icon and badge class based on connection type
-            if (type === 'Mobile' || tech === 'Mobile Data') {
-                badgeClass = 'badge-mobile';
-                icon = 'fa-mobile-alt';
-                badgeText = '<i class="fas fa-mobile-alt badge-icon"></i>';
-            } else if (type === 'WiFi' || tech === 'WiFi') {
-                badgeClass = 'badge-wifi';
-                icon = 'fa-wifi';
-                badgeText = '<i class="fas fa-wifi badge-icon"></i>';
-            } else if (tech === 'Ethernet' || type === 'Wired') {
-                badgeClass = 'badge-ethernet';
-                icon = 'fa-network-wired';
-                badgeText = '<i class="fas fa-network-wired badge-icon"></i>';
-            } else if (tech === 'Satellite' || type === 'Satellite') {
-                badgeClass = 'badge-unknown';
-                icon = 'fa-satellite';
-                badgeText = '<i class="fas fa-satellite badge-icon"></i>';
+            // Update results display as well
+            let detailedLocation = '';
+            if (location.city !== 'Unknown' && location.region !== 'Unknown' && location.country !== 'Unknown') {
+                detailedLocation = `${location.city}, ${location.region}, ${location.country}`;
+            } else if (location.city !== 'Unknown' && location.country !== 'Unknown') {
+                detailedLocation = `${location.city}, ${location.country}`;
+            } else if (location.country !== 'Unknown') {
+                detailedLocation = location.country;
             } else {
-                badgeClass = 'badge-unknown';
-                icon = 'fa-question-circle';
-                badgeText = '<i class="fas fa-question-circle badge-icon"></i>';
+                detailedLocation = 'Approximate location detected';
             }
             
-            return `<span class="connection-badge ${badgeClass}">${badgeText}</span>`;
-        }
-        
-        // Test download speed
-        async function testDownloadSpeed() {
-            const statusMessage = document.getElementById('statusMessage');
-            statusMessage.textContent = 'Testing download speed...';
+            document.getElementById('detectedLocation').innerHTML = 
+                `<strong>Your Location:</strong> ${detailedLocation}`;
             
-            let speeds = [];
-            const testDuration = 4000;
-            const parallelConnections = 4;
-            
-            const downloadServers = [
-                { url: "https://speed.cloudflare.com/__down?bytes=20000000", size: 20000000 },
-                { url: "https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js", size: 89513 },
-                { url: "https://raw.githubusercontent.com/torvalds/linux/master/README", size: 37000 },
-            ];
-            
-            for (const server of downloadServers) {
-                try {
-                    const speed = await measureDownloadSpeed(server.url, server.size, testDuration, parallelConnections);
-                    
-                    if (speed > 0.1 && speed < 10000) {
-                        speeds.push(speed);
-                    }
-                    
-                    if (speeds.length >= 2) break;
-                    
-                } catch (error) {
-                    continue;
-                }
-            }
-            
-            if (speeds.length === 0) {
-                return await simpleDownloadTest();
-            }
-            
-            const averageSpeed = speeds.reduce((a, b) => a + b, 0) / speeds.length;
-            return Math.round(averageSpeed * 10) / 10;
-        }
-        
-        async function measureDownloadSpeed(url, fileSize, duration, connections) {
-            const startTime = performance.now();
-            let totalBytes = 0;
-            
-            return new Promise((resolve, reject) => {
-                const connectionPromises = [];
-                
-                for (let i = 0; i < connections; i++) {
-                    connectionPromises.push(
-                        fetch(url + `?nocache=${Date.now()}-${i}`, {
-                            cache: 'no-store',
-                            headers: {
-                                'Cache-Control': 'no-cache',
-                                'Pragma': 'no-cache'
-                            }
-                        }).then(async response => {
-                            const reader = response.body.getReader();
-                            let bytesReceived = 0;
-                            
-                            while (performance.now() - startTime < duration) {
-                                const { done, value } = await reader.read();
-                                if (done) break;
-                                bytesReceived += value.length;
-                                totalBytes += value.length;
-                            }
-                            
-                            reader.cancel();
-                            return bytesReceived;
-                        }).catch(error => {
-                            return 0;
-                        })
-                    );
-                }
-                
-                const progressInterval = setInterval(() => {
-                    const elapsed = performance.now() - startTime;
-                    if (elapsed >= duration) {
-                        clearInterval(progressInterval);
-                        const speedMbps = (totalBytes * 8) / (duration / 1000) / (1024 * 1024);
-                        resolve(speedMbps);
-                    }
-                }, 100);
-                
-                setTimeout(() => {
-                    clearInterval(progressInterval);
-                    const elapsed = performance.now() - startTime;
-                    const speedMbps = (totalBytes * 8) / (elapsed / 1000) / (1024 * 1024);
-                    resolve(speedMbps);
-                }, duration + 1000);
-            });
-        }
-        
-        async function simpleDownloadTest() {
-            try {
-                const startTime = performance.now();
-                const response = await fetch('https://speed.cloudflare.com/__down?bytes=10000000' + `?t=${Date.now()}`, {
-                    cache: 'no-store'
-                });
-                const blob = await response.blob();
-                const endTime = performance.now();
-                
-                const duration = (endTime - startTime) / 1000;
-                const speedMbps = (blob.size * 8) / (1024 * 1024) / duration;
-                
-                return Math.max(0.1, speedMbps);
-            } catch (error) {
-                return 10;
+            if (location.isp !== 'Unknown' && location.isp !== 'Unknown ISP') {
+                document.getElementById('ispInfo').innerHTML = `<strong>ISP:</strong> ${location.isp}`;
             }
         }
         
-        // Upload speed test
-        async function testUploadSpeed() {
-            const statusMessage = document.getElementById('statusMessage');
-            statusMessage.textContent = 'Testing upload speed...';
-            
-            let speeds = [];
-            const testDuration = 5000;
-            
-            const uploadTests = [
-                { endpoint: 'https://httpbin.org/post', dataSize: 5 * 1024 * 1024 },
-                { endpoint: 'https://httpbin.org/post', dataSize: 10 * 1024 * 1024 },
-            ];
-            
-            for (const test of uploadTests) {
-                try {
-                    const speed = await measureUploadSpeedAdvanced(test.endpoint, test.dataSize, testDuration);
-                    
-                    if (speed > 0.1 && speed < 5000) {
-                        speeds.push(speed);
-                    }
-                    
-                    if (speeds.length >= 2) break;
-                    
-                } catch (error) {
-                    continue;
-                }
-            }
-            
-            if (speeds.length === 0) {
-                return await simpleUploadTest();
-            }
-            
-            const maxSpeed = Math.max(...speeds);
-            return Math.round(maxSpeed * 10) / 10;
-        }
-        
+        // Generate test data - UPDATED FOR LARGER FILES
         function generateTestData(size) {
             const buffer = new ArrayBuffer(size);
             const view = new Uint8Array(buffer);
@@ -2096,171 +2274,361 @@
             return buffer;
         }
         
-        async function measureUploadSpeedAdvanced(endpoint, dataSize, duration) {
-            const startTime = performance.now();
-            let totalBytesSent = 0;
-            const connections = 3;
-            const chunkSize = 256 * 1024;
+        // ENHANCED DOWNLOAD SPEED TEST WITH LONGER DURATION AND LARGER FILES - CAPS REMOVED
+        async function testDownloadSpeed() {
+            updateProgressCard('download', 0, 'Testing');
+            resetGraph('download');
             
-            return new Promise((resolve, reject) => {
-                const connectionPromises = [];
+            let totalSpeed = 0;
+            let speedCount = 0;
+            const testDuration = downloadTestDuration; // 8 seconds now
+            
+            const urls = [
+                "https://speed.cloudflare.com/__down?bytes=50000000&nocache=", // 50MB file
+                "https://raw.githubusercontent.com/torvalds/linux/master/README?nocache=",
+                "https://cdn.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js?nocache="
+            ];
+            
+            // Start real-time graph updates
+            let totalBytesDownloaded = 0;
+            let testStartTime = Date.now();
+            lastBytesUpdateTime = testStartTime;
+            
+            // Update progress text
+            const downloadProgressText = document.getElementById('downloadProgressText');
+            const downloadTimeRemaining = document.getElementById('downloadTimeRemaining');
+            
+            // Real-time update interval for the graph - every 50ms
+            const updateInterval = setInterval(() => {
+                const now = Date.now();
+                const elapsed = (now - testStartTime) / 1000;
+                const remaining = Math.max(0, (downloadTestDuration/1000) - elapsed);
                 
-                for (let i = 0; i < connections; i++) {
-                    connectionPromises.push(
-                        new Promise(async (resolveConn) => {
-                            let bytesSent = 0;
-                            const testData = generateTestData(Math.min(dataSize, 2 * 1024 * 1024));
+                if (elapsed > 0 && totalBytesDownloaded > 0) {
+                    const currentSpeed = (totalBytesDownloaded * 8) / (elapsed * 1024 * 1024);
+                    addSpeedDataPoint(currentSpeed);
+                    
+                    // Update progress text
+                    downloadProgressText.textContent = `Downloaded: ${formatBytes(totalBytesDownloaded)}`;
+                    downloadTimeRemaining.textContent = `Time remaining: ${remaining.toFixed(1)}s`;
+                }
+            }, 50);
+            
+            try {
+                // Use multiple parallel connections for better accuracy
+                const parallelDownloads = 4; // Increased from 3 to 4
+                const downloadPromises = [];
+                
+                for (let i = 0; i < parallelDownloads; i++) {
+                    const url = urls[i % urls.length] + Date.now() + i;
+                    downloadPromises.push(
+                        fetch(url, {
+                            cache: 'no-store',
+                            headers: {
+                                'Cache-Control': 'no-cache',
+                                'Pragma': 'no-cache'
+                            },
+                            mode: 'cors'
+                        }).then(async response => {
+                            if (!response.ok) throw new Error(`HTTP ${response.status}`);
                             
-                            const sendChunk = async () => {
-                                if (performance.now() - startTime >= duration || bytesSent >= dataSize) {
-                                    resolveConn(bytesSent);
-                                    return;
-                                }
+                            const reader = response.body.getReader();
+                            let chunkBytes = 0;
+                            let chunkStartTime = Date.now();
+                            
+                            while (Date.now() - testStartTime < testDuration) {
+                                const { done, value } = await reader.read();
+                                if (done) break;
                                 
-                                try {
-                                    const chunkSizeToSend = Math.min(chunkSize, testData.byteLength - bytesSent);
-                                    const chunk = testData.slice(bytesSent, bytesSent + chunkSizeToSend);
-                                    
-                                    const controller = new AbortController();
-                                    const timeoutId = setTimeout(() => controller.abort(), 8000);
-                                    
-                                    const response = await fetch(endpoint, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/octet-stream',
-                                            'Content-Length': chunkSizeToSend.toString()
-                                        },
-                                        body: chunk,
-                                        signal: controller.signal
-                                    });
-                                    
-                                    clearTimeout(timeoutId);
-                                    
-                                    if (response.ok) {
-                                        bytesSent += chunkSizeToSend;
-                                        totalBytesSent += chunkSizeToSend;
-                                        setTimeout(sendChunk, 0);
-                                    } else {
-                                        resolveConn(bytesSent);
-                                    }
-                                } catch (error) {
-                                    resolveConn(bytesSent);
+                                chunkBytes += value.length;
+                                totalBytesDownloaded += value.length;
+                                
+                                // Calculate instant speed for this chunk
+                                const chunkTime = (Date.now() - chunkStartTime) / 1000;
+                                if (chunkTime > 0.05) {
+                                    const instantSpeed = (value.length * 8) / (chunkTime * 1024 * 1024);
+                                    totalSpeed += instantSpeed;
+                                    speedCount++;
+                                    chunkStartTime = Date.now();
                                 }
-                            };
+                            }
                             
-                            sendChunk();
+                            if (reader.cancel) reader.cancel();
+                            return chunkBytes;
+                        }).catch(error => {
+                            console.log(`Download connection ${i} failed:`, error);
+                            return 0;
                         })
                     );
                 }
                 
-                const progressInterval = setInterval(() => {
-                    const elapsed = performance.now() - startTime;
-                    if (elapsed >= duration) {
-                        clearInterval(progressInterval);
-                        
-                        Promise.all(connectionPromises).then(() => {
-                            const finalElapsed = performance.now() - startTime;
-                            const speedMbps = (totalBytesSent * 8) / (finalElapsed / 1000) / (1024 * 1024);
-                            resolve(speedMbps);
-                        });
-                    }
-                }, 100);
-                
-                setTimeout(() => {
-                    clearInterval(progressInterval);
-                    const elapsed = performance.now() - startTime;
-                    const speedMbps = (totalBytesSent * 8) / (elapsed / 1000) / (1024 * 1024);
-                    resolve(speedMbps);
-                }, duration + 8000);
-            });
-        }
-        
-        async function simpleUploadTest() {
-            try {
-                const testData = generateTestData(2 * 1024 * 1024);
-                
-                const startTime = performance.now();
-                const response = await fetch('https://httpbin.org/post', {
-                    method: 'POST',
+                // Also try a very large file download for sustained measurement
+                const largeFilePromise = fetch('https://speed.cloudflare.com/__down?bytes=100000000&nocache=' + Date.now(), {
+                    cache: 'no-store',
                     headers: {
-                        'Content-Type': 'application/octet-stream',
-                    },
-                    body: testData
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                }).then(async response => {
+                    if (!response.ok) return 0;
+                    
+                    const reader = response.body.getReader();
+                    let largeFileBytes = 0;
+                    const largeFileStartTime = Date.now();
+                    
+                    while (Date.now() - largeFileStartTime < 6000 && Date.now() - testStartTime < testDuration) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        largeFileBytes += value.length;
+                        totalBytesDownloaded += value.length;
+                        
+                        // Update graph with instant speed
+                        const now = Date.now();
+                        const elapsed = (now - largeFileStartTime) / 1000;
+                        if (elapsed > 0) {
+                            const currentSpeed = (largeFileBytes * 8) / (elapsed * 1024 * 1024);
+                            addSpeedDataPoint(currentSpeed);
+                            totalSpeed += currentSpeed;
+                            speedCount++;
+                        }
+                    }
+                    
+                    if (reader.cancel) reader.cancel();
+                    return largeFileBytes;
+                }).catch(error => {
+                    console.log('Large file download failed:', error);
+                    return 0;
                 });
                 
-                await response.json();
-                const endTime = performance.now();
+                downloadPromises.push(largeFilePromise);
                 
-                const duration = (endTime - startTime) / 1000;
-                const speedMbps = (testData.byteLength * 8) / (1024 * 1024) / duration;
-                
-                return Math.max(0.1, speedMbps);
+                // Wait for all downloads to complete
+                await Promise.all(downloadPromises);
                 
             } catch (error) {
-                return 2;
-            }
-        }
-        
-        async function performLatencyTest() {
-            let pings = [];
-            let jitterSamples = [];
-            
-            statusMessage.textContent = 'Measuring latency and jitter...';
-            
-            for (let i = 0; i < 8; i++) {
-                try {
-                    const startTime = performance.now();
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 2000);
-                    
-                    await fetch(bestServer.pingUrl + `?size=100&t=${Date.now()}-${i}`, {
-                        signal: controller.signal,
-                        cache: 'no-store',
-                        headers: {
-                            'Cache-Control': 'no-cache',
-                            'Pragma': 'no-cache'
-                        }
-                    });
-                    
-                    clearTimeout(timeoutId);
-                    const endTime = performance.now();
-                    const ping = endTime - startTime;
-                    
-                    if (ping > 1 && ping < 2000) {
-                        pings.push(ping);
-                        
-                        if (pings.length > 1) {
-                            const jitter = Math.abs(pings[pings.length - 1] - pings[pings.length - 2]);
-                            jitterSamples.push(jitter);
-                        }
-                    }
-                    
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                    
-                } catch (error) {
-                    pings.push(50);
+                console.log('Download test error:', error);
+            } finally {
+                clearInterval(updateInterval);
+                downloadProgressText.textContent = '';
+                downloadTimeRemaining.textContent = '';
+                
+                // Calculate final average speed
+                const totalElapsed = (Date.now() - testStartTime) / 1000;
+                let finalSpeed = 0;
+                
+                if (totalElapsed > 0 && totalBytesDownloaded > 0) {
+                    finalSpeed = (totalBytesDownloaded * 8) / (totalElapsed * 1024 * 1024);
+                } else if (speedCount > 0) {
+                    finalSpeed = totalSpeed / speedCount;
+                } else {
+                    // FALLBACK SPEED CAP REMOVED - was: finalSpeed = 10;
+                    finalSpeed = 0.1; // Minimum realistic speed
                 }
+                
+                // Add final data point
+                addSpeedDataPoint(finalSpeed);
+                
+                // Return average of the last 5 seconds for more stable result
+                const stableSpeed = calculateStableSpeed();
+                
+                // CAP REMOVED - was: Math.max(0.1, Math.round(Math.max(finalSpeed, stableSpeed) * 10) / 10);
+                return Math.max(0.1, Math.max(finalSpeed, stableSpeed));
             }
-            
-            if (pings.length === 0) {
-                return { ping: 50, jitter: 5 };
-            }
-            
-            pings.sort((a, b) => a - b);
-            const medianPing = pings[Math.floor(pings.length / 2)];
-            
-            let jitter = 1;
-            if (jitterSamples.length > 0) {
-                jitter = jitterSamples.reduce((a, b) => a + b, 0) / jitterSamples.length;
-            }
-            
-            return {
-                ping: Math.round(medianPing),
-                jitter: Math.round(jitter * 10) / 10
-            };
         }
         
-        // Update speed display to handle high speeds
+        // Calculate stable speed (average of last 5 seconds)
+        function calculateStableSpeed() {
+            if (speedData.length < 10) return 0;
+            
+            const stableData = speedData.slice(-Math.min(speedData.length, 40)); // Last 2 seconds (40 * 50ms)
+            const average = stableData.reduce((sum, point) => sum + point.speed, 0) / stableData.length;
+            return average;
+        }
+        
+        // Format bytes for display
+        function formatBytes(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+        }
+        
+        // ENHANCED UPLOAD SPEED TEST WITH LONGER DURATION AND LARGER FILES - CAPS REMOVED
+        async function testUploadSpeed() {
+            updateProgressCard('upload', 0, 'Testing');
+            resetGraph('upload');
+            
+            let totalSpeed = 0;
+            let speedCount = 0;
+            const testDuration = uploadTestDuration; // 7 seconds now
+            
+            // Start real-time graph updates
+            let totalBytesUploaded = 0;
+            let testStartTime = Date.now();
+            lastBytesUpdateTime = testStartTime;
+            
+            // Update progress text
+            const uploadProgressText = document.getElementById('uploadProgressText');
+            const uploadTimeRemaining = document.getElementById('uploadTimeRemaining');
+            
+            // Real-time update interval for the graph - every 50ms
+            const updateInterval = setInterval(() => {
+                const now = Date.now();
+                const elapsed = (now - testStartTime) / 1000;
+                const remaining = Math.max(0, (uploadTestDuration/1000) - elapsed);
+                
+                if (elapsed > 0 && totalBytesUploaded > 0) {
+                    const currentSpeed = (totalBytesUploaded * 8) / (elapsed * 1024 * 1024);
+                    addSpeedDataPoint(currentSpeed);
+                    
+                    // Update progress text
+                    uploadProgressText.textContent = `Uploaded: ${formatBytes(totalBytesUploaded)}`;
+                    uploadTimeRemaining.textContent = `Time remaining: ${remaining.toFixed(1)}s`;
+                }
+            }, 50);
+            
+            try {
+                // Generate larger test data - 4MB instead of 2MB
+                const testData = generateTestData(4 * 1024 * 1024);
+                const chunkSize = 128 * 1024; // Increased from 64KB to 128KB
+                const totalChunks = Math.ceil(testData.byteLength / chunkSize);
+                
+                let currentChunk = 0;
+                const uploadStartTime = Date.now();
+                
+                // Upload in multiple phases for better accuracy
+                const uploadPromises = [];
+                
+                // Phase 1: Upload initial chunks
+                while (Date.now() - uploadStartTime < testDuration && currentChunk < totalChunks) {
+                    const start = currentChunk * chunkSize;
+                    const end = Math.min(start + chunkSize, testData.byteLength);
+                    const chunk = testData.slice(start, end);
+                    
+                    const uploadPromise = (async (chunk, chunkNum) => {
+                        try {
+                            const uploadStart = Date.now();
+                            const response = await fetch('https://httpbin.org/post?nocache=' + Date.now() + chunkNum, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/octet-stream',
+                                },
+                                body: chunk,
+                                mode: 'cors'
+                            });
+                            
+                            if (response.ok) {
+                                const uploadTime = (Date.now() - uploadStart) / 1000;
+                                const chunkSizeBytes = chunk.byteLength;
+                                totalBytesUploaded += chunkSizeBytes;
+                                
+                                if (uploadTime > 0) {
+                                    const instantSpeed = (chunkSizeBytes * 8) / (uploadTime * 1024 * 1024);
+                                    addSpeedDataPoint(instantSpeed);
+                                    totalSpeed += instantSpeed;
+                                    speedCount++;
+                                    return instantSpeed;
+                                }
+                            }
+                        } catch (error) {
+                            // Continue with next chunk
+                        }
+                        return 0;
+                    })(chunk, currentChunk);
+                    
+                    uploadPromises.push(uploadPromise);
+                    currentChunk++;
+                    
+                    // Small delay to prevent overwhelming the connection
+                    if (currentChunk % 5 === 0) {
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
+                }
+                
+                // Phase 2: Upload smaller chunks for more granular measurement
+                if (Date.now() - uploadStartTime < testDuration) {
+                    const smallChunkSize = 32 * 1024; // 32KB
+                    const smallTestData = generateTestData(1 * 1024 * 1024); // 1MB
+                    const smallTotalChunks = Math.ceil(smallTestData.byteLength / smallChunkSize);
+                    
+                    for (let i = 0; i < Math.min(smallTotalChunks, 20); i++) {
+                        const start = i * smallChunkSize;
+                        const end = Math.min(start + smallChunkSize, smallTestData.byteLength);
+                        const chunk = smallTestData.slice(start, end);
+                        
+                        const smallUploadPromise = (async (chunk, chunkNum) => {
+                            try {
+                                const uploadStart = Date.now();
+                                const response = await fetch('https://httpbin.org/post?small=1&nocache=' + Date.now() + chunkNum, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/octet-stream',
+                                    },
+                                    body: chunk,
+                                    mode: 'cors'
+                                });
+                                
+                                if (response.ok) {
+                                    const uploadTime = (Date.now() - uploadStart) / 1000;
+                                    const chunkSizeBytes = chunk.byteLength;
+                                    totalBytesUploaded += chunkSizeBytes;
+                                    
+                                    if (uploadTime > 0) {
+                                        const instantSpeed = (chunkSizeBytes * 8) / (uploadTime * 1024 * 1024);
+                                        addSpeedDataPoint(instantSpeed);
+                                        totalSpeed += instantSpeed;
+                                        speedCount++;
+                                        return instantSpeed;
+                                    }
+                                }
+                            } catch (error) {
+                                // Continue with next chunk
+                            }
+                            return 0;
+                        })(chunk, i);
+                        
+                        uploadPromises.push(smallUploadPromise);
+                        
+                        if (Date.now() - uploadStartTime >= testDuration) break;
+                    }
+                }
+                
+                // Wait for all uploads to complete
+                await Promise.all(uploadPromises);
+                
+            } catch (error) {
+                console.log('Upload test error:', error);
+            } finally {
+                clearInterval(updateInterval);
+                uploadProgressText.textContent = '';
+                uploadTimeRemaining.textContent = '';
+                
+                // Calculate final average speed
+                const totalElapsed = (Date.now() - testStartTime) / 1000;
+                let finalSpeed = 0;
+                
+                if (totalElapsed > 0 && totalBytesUploaded > 0) {
+                    finalSpeed = (totalBytesUploaded * 8) / (totalElapsed * 1024 * 1024);
+                } else if (speedCount > 0) {
+                    finalSpeed = totalSpeed / speedCount;
+                } else {
+                    // FALLBACK SPEED CAP REMOVED - was: finalSpeed = 2;
+                    finalSpeed = 0.1; // Minimum realistic speed
+                }
+                
+                // Add final data point
+                addSpeedDataPoint(finalSpeed);
+                
+                // Return average of the last 5 seconds for more stable result
+                const stableSpeed = calculateStableSpeed();
+                
+                // CAP REMOVED - was: Math.max(0.1, Math.round(Math.max(finalSpeed, stableSpeed) * 10) / 10);
+                return Math.max(0.1, Math.max(finalSpeed, stableSpeed));
+            }
+        }
+        
+        // Update speed display
         function updateSpeedDisplay(speed) {
             const speedValue = document.getElementById('speedValue');
             const speedStatus = document.getElementById('speedStatus');
@@ -2305,49 +2673,7 @@
             speedValue.innerHTML = `${speed.toFixed(1)} <span style="font-size: 0.5em;">Mbps</span>`;
         }
         
-        function updateQualityIndicators(results) {
-            const pingQuality = document.getElementById('pingQuality');
-            if (results.ping < 20) {
-                pingQuality.textContent = 'Excellent';
-                pingQuality.style.color = '#2E7D32';
-            } else if (results.ping < 40) {
-                pingQuality.textContent = 'Very Good';
-                pingQuality.style.color = '#4CAF50';
-            } else if (results.ping < 60) {
-                pingQuality.textContent = 'Good';
-                pingQuality.style.color = '#FF9800';
-            } else if (results.ping < 100) {
-                pingQuality.textContent = 'Fair';
-                pingQuality.style.color = '#FF9800';
-            } else {
-                pingQuality.textContent = 'Poor';
-                pingQuality.style.color = '#F44336';
-            }
-            
-            const jitterQuality = document.getElementById('jitterQuality');
-            if (results.jitter < 5) {
-                jitterQuality.textContent = 'Excellent';
-                jitterQuality.style.color = '#2E7D32';
-            } else if (results.jitter < 10) {
-                jitterQuality.textContent = 'Good';
-                jitterQuality.style.color = '#4CAF50';
-            } else if (results.jitter < 20) {
-                jitterQuality.textContent = 'Fair';
-                jitterQuality.style.color = '#FF9800';
-            } else {
-                jitterQuality.textContent = 'Poor';
-                jitterQuality.style.color = '#F44336';
-            }
-        }
-        
-        function updateStage(stageId) {
-            document.querySelectorAll('.test-stage').forEach(stage => {
-                stage.classList.remove('active');
-            });
-            document.getElementById(stageId).classList.add('active');
-        }
-        
-        // Scroll results into view
+        // Scroll to results
         function scrollToResults() {
             const speedResult = document.getElementById('speedResult');
             speedResult.scrollIntoView({ 
@@ -2356,150 +2682,95 @@
             });
         }
         
+        // Main speed test function
         async function startSpeedTest() {
             if (testInProgress || !bestServer) return;
             
             const resultDiv = document.getElementById('speedResult');
             const testButton = document.getElementById('testButton');
-            const progressContainer = document.getElementById('progressContainer');
-            const progressBar = document.getElementById('progressBar');
-            const statusMessage = document.getElementById('statusMessage');
-            const serverSelection = document.getElementById('serverSelection');
             
             testInProgress = true;
             testButton.disabled = true;
             testButton.textContent = 'Testing in Progress...';
             resultDiv.style.display = 'none';
-            progressContainer.style.display = 'block';
-            progressBar.style.width = '0%';
-            serverSelection.style.display = 'none';
             
-            document.querySelectorAll('.test-stage').forEach(stage => {
-                stage.classList.remove('active');
-            });
+            hideError();
+            
+            showProgressContainer();
             
             try {
-                updateStage('stageLocation');
-                statusMessage.textContent = 'Initializing connection to selected server...';
-                progressBar.style.width = '10%';
+                // Stage 1: Location
+                updateStage('location');
+                document.getElementById('testPhase').textContent = 'Connecting to Server...';
+                document.getElementById('testPhaseBadge').textContent = 'Connecting';
+                document.getElementById('testPhaseBadge').className = 'test-phase-badge testing';
                 
-                if (!userLocation) {
-                    userLocation = await detectUserLocation();
-                }
-                
-                // Update location display
+                // Already have location from initialization
                 updateLocationDisplay(userLocation);
                 
-                // Update results display with accurate location
-                let detailedLocation = '';
-                if (userLocation.city !== 'Unknown' && userLocation.region !== 'Unknown' && userLocation.country !== 'Unknown') {
-                    detailedLocation = `${userLocation.city}, ${userLocation.region}, ${userLocation.country}`;
-                } else if (userLocation.city !== 'Unknown' && userLocation.country !== 'Unknown') {
-                    detailedLocation = `${userLocation.city}, ${userLocation.country}`;
-                } else if (userLocation.country !== 'Unknown') {
-                    detailedLocation = userLocation.country;
-                } else {
-                    detailedLocation = 'Detected from connection data';
-                }
-                
-                document.getElementById('detectedLocation').innerHTML = 
-                    `<strong>Your Location:</strong> ${detailedLocation}`;
-                
-                // Update test server info in results
-                let serverInfo = '';
-                if (bestServer.country === 'Global') {
-                    serverInfo = 'Global CDN Network';
-                } else {
-                    serverInfo = `${bestServer.city}, ${bestServer.country}`;
-                }
-                document.getElementById('testServerInfo').innerHTML = 
-                    `<strong>Test Server:</strong> ${serverInfo}`;
-                
-                if (userLocation.isp !== 'Unknown' && userLocation.isp !== 'Unknown ISP') {
-                    document.getElementById('ispInfo').innerHTML = `<strong>ISP:</strong> ${userLocation.isp}`;
-                }
-                
-                updateStage('stagePing');
-                statusMessage.textContent = 'Measuring connection quality...';
-                progressBar.style.width = '25%';
-                
-                const latencyResults = await performLatencyTest();
-                document.getElementById('pingValue').textContent = latencyResults.ping + ' ms';
-                document.getElementById('jitterValue').textContent = latencyResults.jitter + ' ms';
-                updateQualityIndicators(latencyResults);
-                
-                updateStage('stageDownload');
-                statusMessage.textContent = 'Testing download speed...';
-                progressBar.style.width = '50%';
+                // Stage 2: Download test
+                updateStage('download');
+                updateProgressCard('download', 0, 'Testing');
+                document.getElementById('testPhase').textContent = 'Testing Download Speed (8 seconds)...';
+                document.getElementById('testPhaseBadge').textContent = 'Downloading';
                 
                 const downloadSpeed = await testDownloadSpeed();
                 document.getElementById('downloadSpeed').textContent = downloadSpeed.toFixed(1) + ' Mbps';
                 document.getElementById('speedValue').textContent = downloadSpeed.toFixed(1);
-                progressBar.style.width = '75%';
                 
-                updateStage('stageUpload');
-                statusMessage.textContent = 'Testing upload speed...';
+                updateProgressCard('download', downloadSpeed, 'Completed');
+                
+                // Stage 3: Upload test
+                updateStage('upload');
+                updateProgressCard('upload', 0, 'Testing');
+                document.getElementById('testPhase').textContent = 'Testing Upload Speed (7 seconds)...';
+                document.getElementById('testPhaseBadge').textContent = 'Uploading';
                 
                 const uploadSpeed = await testUploadSpeed();
                 document.getElementById('uploadSpeed').textContent = uploadSpeed.toFixed(1) + ' Mbps';
-                progressBar.style.width = '90%';
                 
-                updateStage('stageComplete');
-                statusMessage.textContent = 'Analyzing connection type...';
-                progressBar.style.width = '100%';
+                updateProgressCard('upload', uploadSpeed, 'Completed');
                 
-                const connectionInfo = await detectConnectionType(
-                    downloadSpeed,
-                    uploadSpeed,
-                    latencyResults.ping,
-                    latencyResults.jitter
-                );
-                
-                detectedConnectionType = connectionInfo.type;
-                
-                const badge = getConnectionBadge(connectionInfo.type, connectionInfo.technology);
-                document.getElementById('connectionType').innerHTML = 
-                    `<strong>Connection Type:</strong> ${connectionInfo.type} ${badge}`;
-                
-                if (connectionInfo.confidence > 70) {
-                    document.getElementById('connectionAccuracy').innerHTML = 
-                        `<strong>Detection Confidence:</strong> High (${connectionInfo.confidence}%)`;
-                } else if (connectionInfo.confidence > 40) {
-                    document.getElementById('connectionAccuracy').innerHTML = 
-                        `<strong>Detection Confidence:</strong> Moderate (${connectionInfo.confidence}%)`;
-                } else {
-                    document.getElementById('connectionAccuracy').innerHTML = 
-                        `<strong>Detection Confidence:</strong> Low - using best estimate`;
-                }
+                // Stage 4: Analysis
+                updateStage('complete');
+                document.getElementById('testPhase').textContent = 'Analyzing Results...';
+                document.getElementById('testPhaseBadge').textContent = 'Analyzing';
+                document.getElementById('testPhaseBadge').className = 'test-phase-badge testing';
                 
                 updateSpeedDisplay(downloadSpeed);
                 
+                document.getElementById('graphOverlay').style.display = 'none';
+                
                 setTimeout(() => {
+                    hideProgressContainer();
                     resultDiv.style.display = 'block';
-                    progressContainer.style.display = 'none';
                     testButton.disabled = false;
                     testButton.textContent = 'Run New Test';
                     testInProgress = false;
-                    serverSelection.style.display = 'block';
-                    statusMessage.textContent = 'Test complete! Select a different server to test again.';
-                    
-                    // Scroll results into view
+                    document.getElementById('serverSelection').style.display = 'block';
                     scrollToResults();
-                }, 800);
+                }, 1000);
                 
             } catch (error) {
-                statusMessage.textContent = 'Test failed. Please check your connection and try again.';
+                document.getElementById('testPhase').textContent = 'Test Failed';
+                document.getElementById('testPhaseBadge').textContent = 'Error';
+                document.getElementById('testPhaseBadge').className = 'test-phase-badge';
                 console.error('Speed test error:', error);
-                testButton.disabled = false;
-                testButton.textContent = 'Start Speed Test';
-                testInProgress = false;
-                progressContainer.style.display = 'none';
-                serverSelection.style.display = 'block';
+                
+                setTimeout(() => {
+                    hideProgressContainer();
+                    testButton.disabled = false;
+                    testButton.textContent = 'Start Speed Test';
+                    testInProgress = false;
+                    document.getElementById('serverSelection').style.display = 'block';
+                    showError('Speed test failed. Please check your connection and try again.');
+                }, 2000);
             }
         }
         
         // Main initialization function
         async function initializeApp() {
+            initializationAttempted = true;
             const preloader = document.getElementById('preloader');
             const testButton = document.getElementById('testButton');
             
@@ -2512,44 +2783,47 @@
             updateLoadingProgress(25);
             
             try {
-                // Detect user location
                 userLocation = await detectUserLocation();
-                
-                // Update location display
                 updateLocationDisplay(userLocation);
                 
-                updateLoadingProgress(60);
+                console.log('Detected location:', userLocation);
                 
-                // Find and test closest servers
-                const candidates = await findAndTestServerOptions(userLocation);
-                serverCandidates = candidates;
+                updateLoadingProgress(60);
+                await findAndTestServerOptions(userLocation);
                 
                 updateLoadingProgress(100);
+                
+                setTimeout(() => {
+                    preloader.classList.add('hidden');
+                }, 500);
                 
             } catch (error) {
-                console.log('Background initialization failed:', error);
+                console.log('Initialization failed:', error);
                 updateLoadingProgress(100);
                 
-                // Show error state
-                const statusMessage = document.getElementById('statusMessage');
-                statusMessage.textContent = 'Unable to detect location. Please try again.';
-                testButton.disabled = false;
-                testButton.textContent = 'Try Again';
-                testButton.onclick = () => location.reload();
+                setTimeout(() => {
+                    preloader.classList.add('hidden');
+                    showError('Unable to initialize speed test. Using default servers.');
+                    
+                    bestServer = testServers.find(s => s.id === 'cdn_global') || testServers[0];
+                    updateServerDisplay(bestServer);
+                    
+                    testButton.disabled = false;
+                    testButton.textContent = 'Start Speed Test';
+                }, 500);
             }
-            
-            setTimeout(() => {
-                preloader.classList.add('hidden');
-            }, 500);
         }
         
         // Initialize on load
         window.addEventListener('load', () => {
-            // Check for required permissions first
-            const permissionsGranted = checkPermissions();
-            
-            if (permissionsGranted) {
-                initializeApp();
+            checkPermissions();
+            initializeApp();
+        });
+        
+        // Initialize on window resize
+        window.addEventListener('resize', () => {
+            if (document.getElementById('testProgressContainer').style.display === 'block') {
+                initializeSpeedGraph();
             }
         });
     </script>
